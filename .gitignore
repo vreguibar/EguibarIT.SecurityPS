@@ -109,6 +109,7 @@ Sources/*/bin
 Sources/*/*/obj
 Sources/*/*/bin
 Sources/packages/*
+PSScriptAnalyzerSettings.ps1
 
 # JetBrains Rider
 .idea/
