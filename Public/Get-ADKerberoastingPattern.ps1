@@ -564,9 +564,15 @@
 
         } #end if-else
 
-        $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName, 'detecting Kerberoasting patterns.')
-        Write-Verbose -Message $txt
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting Kerberoasting patterns.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
     } #end end
 
-} #end function Get-ADKerberoastingPattern
+} #end function Get-KerberoastingPatterns

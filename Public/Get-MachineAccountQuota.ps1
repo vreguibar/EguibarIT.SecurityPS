@@ -144,25 +144,6 @@
             Get-Date                               | Microsoft.PowerShell.Utility
 
     .NOTES
-        Used Functions:
-            Name                                   | Module
-            --------------------------------------- | --------------------------
-            Get-FunctionDisplay                    | EguibarIT.SecurityPS
-            Get-ADDomain                           | Microsoft.ActiveDirectory.Management
-            Get-ADDomainController                 | Microsoft.ActiveDirectory.Management
-            Get-WinEvent                           | Microsoft.PowerShell.Diagnostics
-            Get-ADComputer                         | Microsoft.ActiveDirectory.Management
-            Export-Csv                             | Microsoft.PowerShell.Utility
-            Out-File                               | Microsoft.PowerShell.Utility
-            Write-Verbose                          | Microsoft.PowerShell.Utility
-            Write-Warning                          | Microsoft.PowerShell.Utility
-            Write-Error                            | Microsoft.PowerShell.Utility
-            Write-Output                           | Microsoft.PowerShell.Utility
-            New-Item                               | Microsoft.PowerShell.Management
-            Test-Path                              | Microsoft.PowerShell.Management
-            Join-Path                              | Microsoft.PowerShell.Management
-            Get-Date                               | Microsoft.PowerShell.Utility
-
         Version:         1.0.0
         DateModified:    02/Mar/2026
         LastModifiedBy:  Vicente Rodriguez Eguibar
@@ -324,9 +305,6 @@ ALTERNATIVE - If you MUST allow computer joins (not recommended):
 
             try {
                 $DomainControllers = Get-ADDomainController -Filter * -ErrorAction Stop | Select-Object -ExpandProperty HostName
-
-                Write-Verbose -Message ('Authorized Creators: {0}' -f ($AuthorizedCreators -join ', '))
-                Write-Verbose -Message ('Scanning {0} Domain Controllers' -f $DomainControllers.Count)
 
                 Write-Verbose -Message ('Authorized Creators: {0}' -f ($AuthorizedCreators -join ', '))
                 Write-Verbose -Message ('Scanning {0} Domain Controllers' -f $DomainControllers.Count)
@@ -619,19 +597,19 @@ $(if ($MAQ -gt 0) { 'IMMEDIATE ACTION REQUIRED: Set MachineAccountQuota to 0' } 
                 TotalComputerAccounts      = $AllComputers.Count
                 SuspiciousComputersCount   = $SuspiciousComputers.Count
                 CriticalRBCDCount          = if ($CriticalComputers) {
-                    $CriticalComputers.Count 
+                    $CriticalComputers.Count
                 } else {
-                    0 
+                    0
                 }
                 HighRiskCount              = if ($HighRiskComputers) {
-                    $HighRiskComputers.Count 
+                    $HighRiskComputers.Count
                 } else {
-                    0 
+                    0
                 }
                 ModerateRiskCount          = if ($ModerateRiskComputers) {
-                    $ModerateRiskComputers.Count 
+                    $ModerateRiskComputers.Count
                 } else {
-                    0 
+                    0
                 }
                 UnauthorizedCreationsCount = $SuspiciousCreations.Count
                 AuditTimeSpanDays          = $TimeSpanDays
@@ -643,35 +621,35 @@ $(if ($MAQ -gt 0) { 'IMMEDIATE ACTION REQUIRED: Set MachineAccountQuota to 0' } 
                     'Configuration is secure. Continue monitoring for suspicious computer accounts.'
                 }
                 ExportedReports            = if ($ExportedReports.Count -gt 0) {
-                    $ExportedReports.ToArray() 
+                    $ExportedReports.ToArray()
                 } else {
-                    @() 
+                    @()
                 }
                 AuthorizedCreators         = $AuthorizedCreators
                 SuspiciousComputers        = if ($SuspiciousComputers.Count -gt 0) {
-                    $SuspiciousComputers 
+                    $SuspiciousComputers
                 } else {
-                    @() 
+                    @()
                 }
                 SuspiciousCreations        = if ($SuspiciousCreations.Count -gt 0) {
-                    $SuspiciousCreations 
+                    $SuspiciousCreations
                 } else {
-                    @() 
+                    @()
                 }
                 CriticalComputers          = if ($CriticalComputers) {
-                    $CriticalComputers 
+                    $CriticalComputers
                 } else {
-                    @() 
+                    @()
                 }
                 HighRiskComputers          = if ($HighRiskComputers) {
-                    $HighRiskComputers 
+                    $HighRiskComputers
                 } else {
-                    @() 
+                    @()
                 }
                 ModerateRiskComputers      = if ($ModerateRiskComputers) {
-                    $ModerateRiskComputers 
+                    $ModerateRiskComputers
                 } else {
-                    @() 
+                    @()
                 }
             }
 
@@ -700,14 +678,14 @@ Next Steps:
             throw
         } #end try-catch
 
-        $Footer = @"
-===============================================================================
-$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-  Function: $($MyInvocation.InvocationName)
-  Completed Audit Execution
-===============================================================================
-"@
-        Write-Verbose -Message $Footer
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished auditing machine account quota.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
     } # end END
 

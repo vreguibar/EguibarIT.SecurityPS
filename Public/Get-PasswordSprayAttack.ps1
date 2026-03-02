@@ -677,8 +677,14 @@
 
         } #end if
 
-        $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName, 'detecting password spray attacks.')
-        Write-Verbose -Message $txt
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting password spray attacks.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
     } #end end
 
