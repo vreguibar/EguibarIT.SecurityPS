@@ -1,0 +1,150 @@
+﻿# PowerShell Module .gitignore for EguibarIT.SecurityPS
+# Security-focused module - prevent credential and sensitive data leaks
+
+###############################################################################
+# CRITICAL SECURITY - Credentials & Secrets
+###############################################################################
+*credential*.xml
+*cred*.xml
+*password*.txt
+*secret*.txt
+*.pfx
+*.p12
+*.key
+*.pem
+*.cer
+*.crt
+appsettings.json
+secrets.json
+.env
+.env.*
+*.rdp
+
+###############################################################################
+# SECURITY MODULE SPECIFIC - AD Security Audit Results
+###############################################################################
+# Don't commit actual security scan results
+*-CredentialTheftAudit*.xml
+*-KerberosAudit*.xml
+*-PassTheHashDetection*.log
+*-GoldenTicketScan*.json
+*-SilverTicketScan*.json
+*-PrivilegeEscalation*.csv
+*-SecurityAudit*.csv
+*-SecurityAudit*.json
+AuditResults/
+SecurityReports/
+TestADData/
+
+# Don't commit actual AD dumps or extracts
+ADDump/
+DomainExport/
+BloodHound/
+*.bloodhound
+
+###############################################################################
+# PowerShell Build & Test Artifacts
+###############################################################################
+build.ps1
+Publish.ps1
+Output/*
+Releases/*
+ReleasedUnpacked/*
+Package/
+*.nupkg
+bin/
+obj/
+Artefacts/*
+
+# Test results - keep Tests/ folder but ignore results
+Tests/**/TestResults/
+TestResults/
+*.trx
+testresults.xml
+coverage.xml
+
+# PowerShell transcripts and logs
+*.log
+*.transcript
+transcripts/
+
+###############################################################################
+# Temporary & Backup Files
+###############################################################################
+*.html
+*.old
+*.bak*
+*.new
+*.corrupted
+*.tmp
+*.fixed
+*.temp
+*.backup
+*~
+*.swp
+*.swo
+
+###############################################################################
+# IDEs and Editors
+###############################################################################
+# Visual Studio Code
+.history
+.history/
+.ionide
+.vscode/*
+*.vsix
+*.code-workspace
+
+# Visual Studio
+.vs
+.vs/*
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+Sources/.vs
+Sources/*/.vs
+Sources/*/obj
+Sources/*/bin
+Sources/*/*/obj
+Sources/*/*/bin
+Sources/packages/*
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+###############################################################################
+# Documentation & Examples
+###############################################################################
+Docs/*
+Example/*
+Examples/Logs/*
+.github/*
+
+###############################################################################
+# Internal/Development Only
+###############################################################################
+To-Do.txt
+Ignore/*
+Lib/Default/*
+Lib/Standard/*
+Lib/Core/*
+GPO-Archive_V1.0.zip
+
+###############################################################################
+# Operating System
+###############################################################################
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+.directory
