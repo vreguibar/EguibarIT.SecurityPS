@@ -202,7 +202,7 @@
 
         Set-StrictMode -Version Latest
 
-        # Module imports
+        # Log function invocation with parameters
         $txt = ($Variables.HeaderSecurity -f
             (Get-Date).ToShortDateString(),
             $MyInvocation.Mycommand,
