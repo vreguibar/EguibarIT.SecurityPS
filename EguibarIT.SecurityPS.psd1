@@ -68,8 +68,20 @@
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     # NestedModules = @()
 
-    # Functions to export (empty until public functions are added)
-    FunctionsToExport    = @()
+    # Functions to export
+    FunctionsToExport    = @(
+        'Find-GPPPasswords',
+        'Get-ADASREPRoastingVulnerability',
+        'Get-ADKerberoastingPattern',
+        'Get-DCSyncAttack',
+        'Get-GoldenSAMLDetection',
+        'Get-GoldenTicketDetection',
+        'Get-MachineAccountQuota',
+        'Get-PasswordSprayAttack',
+        'Get-SilverTicketDetection',
+        'Get-UnconstrainedDelegation',
+        'Import-MyModule'
+    )
 
     # Cmdlets to export from this module
     CmdletsToExport      = @()
@@ -98,8 +110,9 @@
             Tags       = @(
                 'Windows', 'ActiveDirectory', 'AD', 'Security', 'Audit',
                 'CredentialTheft', 'PassTheHash', 'PassTheTicket',
-                'GoldenTicket', 'SilverTicket', 'FiveEyes',
-                'Remediation', 'Compliance', 'Kerberos', 'NTLM'
+                'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'SAML',
+                'ADFS', 'FiveEyes', 'Remediation', 'Compliance',
+                'Kerberos', 'NTLM', 'Federation'
             )
 
             # A URL to the license for this module.
