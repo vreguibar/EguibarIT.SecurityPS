@@ -72,6 +72,7 @@
     FunctionsToExport    = @(
         'Find-GPPPasswords',
         'Get-ADASREPRoastingVulnerability',
+        'Get-ADCSVulnerability',
         'Get-ADKerberoastingPattern',
         'Get-DCSyncAttack',
         'Get-GoldenSAMLDetection',
@@ -111,7 +112,8 @@
                 'Windows', 'ActiveDirectory', 'AD', 'Security', 'Audit',
                 'CredentialTheft', 'PassTheHash', 'PassTheTicket',
                 'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'SAML',
-                'ADFS', 'FiveEyes', 'Remediation', 'Compliance',
+                'ADFS', 'ADCS', 'PKI', 'CertificateServices',
+                'FiveEyes', 'Remediation', 'Compliance',
                 'Kerberos', 'NTLM', 'Federation'
             )
 
