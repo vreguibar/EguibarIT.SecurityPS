@@ -80,6 +80,7 @@
         'Get-GoldenTicketDetection',
         'Get-MachineAccountQuota',
         'Get-PasswordSprayAttack',
+        'Get-SIDHistoryInjectionAttack',
         'Get-SilverTicketDetection',
         'Get-UnconstrainedDelegation',
         'Import-MyModule'
@@ -114,6 +115,7 @@
                 'CredentialTheft', 'PassTheHash', 'PassTheTicket',
                 'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'SAML',
                 'DCShadow', 'ReplicationAttack',
+                'SIDHistory', 'SIDHistoryInjection',
                 'ADFS', 'ADCS', 'PKI', 'CertificateServices',
                 'FiveEyes', 'Remediation', 'Compliance',
                 'Kerberos', 'NTLM', 'Federation'
