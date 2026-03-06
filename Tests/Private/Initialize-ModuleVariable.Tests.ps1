@@ -21,9 +21,22 @@ BeforeAll {
     # Get module root and import the function
     $ModuleRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
     $FunctionPath = Join-Path -Path $ModuleRoot -ChildPath 'Private\Initialize-ModuleVariable.ps1'
+    $ConstantsPath = Join-Path -Path $ModuleRoot -ChildPath 'Enums\Enum.Constants.ps1'
+    $VariablesPath = Join-Path -Path $ModuleRoot -ChildPath 'Enums\Enum.Variables.ps1'
+
+    # Initialize module-level constants and variables expected by the function
+    . $ConstantsPath
+    . $VariablesPath
 
     # Dot-source the function
     . $FunctionPath
+
+    $script:IsDomainJoined = $true
+    try {
+        [void][System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+    } catch {
+        $script:IsDomainJoined = $false
+    }
 
     # Mock Get-ADObject to avoid actual AD calls in tests
     Mock Get-ADObject {
@@ -54,6 +67,8 @@ Describe 'Initialize-ModuleVariable' {
             if (Get-Variable -Name 'Variables' -Scope Global -ErrorAction SilentlyContinue) {
                 Remove-Variable -Name 'Variables' -Scope Global -Force
             }
+
+            . $VariablesPath
         }
 
         It 'Should execute without errors' {
@@ -65,27 +80,27 @@ Describe 'Initialize-ModuleVariable' {
             $Variables | Should -Not -BeNullOrEmpty
         }
 
-        It 'Should initialize AdDN variable' {
+        It 'Should initialize AdDN variable' -Skip:(-not $script:IsDomainJoined) {
             Initialize-ModuleVariable
             $Variables.AdDN | Should -Not -BeNullOrEmpty
         }
 
-        It 'Should initialize DnsFqdn variable' {
+        It 'Should initialize DnsFqdn variable' -Skip:(-not $script:IsDomainJoined) {
             Initialize-ModuleVariable
             $Variables.DnsFqdn | Should -Not -BeNullOrEmpty
         }
 
-        It 'Should initialize GuidMap as hashtable' {
+        It 'Should initialize GuidMap as hashtable' -Skip:(-not $script:IsDomainJoined) {
             Initialize-ModuleVariable
             $Variables.GuidMap | Should -BeOfType [hashtable]
         }
 
-        It 'Should initialize ExtendedRightsMap as hashtable' {
+        It 'Should initialize ExtendedRightsMap as hashtable' -Skip:(-not $script:IsDomainJoined) {
             Initialize-ModuleVariable
             $Variables.ExtendedRightsMap | Should -BeOfType [hashtable]
         }
 
-        It 'Should initialize WellKnownSIDs as hashtable' {
+        It 'Should initialize WellKnownSIDs as hashtable' -Skip:(-not $script:IsDomainJoined) {
             Initialize-ModuleVariable
             $Variables.WellKnownSIDs | Should -BeOfType [hashtable]
         }
@@ -93,7 +108,7 @@ Describe 'Initialize-ModuleVariable' {
 
     Context 'Force Parameter' {
 
-        It 'Should reinitialize when Force is used' {
+        It 'Should reinitialize when Force is used' -Skip:(-not $script:IsDomainJoined) {
             Initialize-ModuleVariable
             $initialDN = $Variables.AdDN
 

@@ -12,7 +12,7 @@
     RootModule           = 'EguibarIT.SecurityPS.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '0.0.1'
+    ModuleVersion        = '1.0.0'
 
     # Supported PSEditions
     CompatiblePSEditions = 'Desktop', 'Core'
@@ -30,7 +30,7 @@
     Copyright            = 'All rights reserved (c) 2026 - EguibarIT.'
 
     # Description of the functionality provided by this module
-    Description          = 'PowerShell module for auditing and remediating Active Directory security vulnerabilities. Focuses on credential theft attacks (Pass-the-Hash, Pass-the-Ticket, Golden/Silver Tickets) as documented in Five Eyes advisories. Supports multi-forest, multi-domain, and hybrid environments.'
+    Description          = 'PowerShell module detecting 15+ Active Directory attack patterns from Five Eyes Joint Cybersecurity Advisory. Identifies credential theft (Pass-the-Hash, Pass-the-Ticket, Golden/Silver Tickets, Kerberoasting, AS-REP Roasting), persistence mechanisms (Skeleton Key, SID History Injection, Golden Certificate), privilege escalation (DCSync, DCShadow, Domain Trust Bypass, Unconstrained Delegation), and hybrid infrastructure compromise (Entra Connect, Golden SAML, ADCS vulnerabilities). Supports multi-forest, multi-domain, and hybrid environments.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion    = '5.1'
@@ -76,6 +76,8 @@
         'Get-ADKerberoastingPattern',
         'Get-DCShadowAttack',
         'Get-DCSyncAttack',
+        'Get-DomainTrustBypass',
+        'Get-EntraConnectCompromise',
         'Get-GoldenSAMLDetection',
         'Get-GoldenTicketDetection',
         'Get-MachineAccountQuota',
@@ -114,13 +116,16 @@
             Tags       = @(
                 'Windows', 'ActiveDirectory', 'AD', 'Security', 'Audit',
                 'CredentialTheft', 'PassTheHash', 'PassTheTicket',
-                'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'SAML',
-                'DCShadow', 'ReplicationAttack',
+                'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'GoldenCertificate', 'SAML',
+                'DCShadow', 'DCSync', 'ReplicationAttack',
                 'SIDHistory', 'SIDHistoryInjection',
                 'SkeletonKey', 'LSASS',
                 'ADFS', 'ADCS', 'PKI', 'CertificateServices',
                 'FiveEyes', 'Remediation', 'Compliance',
-                'Kerberos', 'NTLM', 'Federation'
+                'Kerberos', 'NTLM', 'Federation',
+                'MITRE', 'ATTACK', 'T1003', 'T1078', 'T1484', 'T1550', 'T1649',
+                'EntraConnect', 'AzureADConnect', 'DomainTrust', 'TrustBypass',
+                'Kerberoasting', 'ASREPRoasting', 'UnconstrainedDelegation'
             )
 
             # A URL to the license for this module.

@@ -1,4 +1,5 @@
-﻿BeforeAll {
+﻿Describe 'Get-GoldenSAMLDetection Setup' {
+BeforeAll {
     # Module import and setup
     $ModuleName = 'EguibarIT.SecurityPS'
     $FunctionName = 'Get-GoldenSAMLDetection'
@@ -472,3 +473,5 @@ Describe 'Get-GoldenSAMLDetection' {
 AfterAll {
     Remove-Module -Name $ModuleName -Force -ErrorAction SilentlyContinue
 }
+
+} #end Describe Setup Wrapper

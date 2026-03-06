@@ -19,7 +19,7 @@
 
 BeforeAll {
     # Get module root path
-    $ModuleRoot = Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent
+    $ModuleRoot = Split-Path -Path $PSScriptRoot -Parent
     $ManifestPath = Join-Path -Path $ModuleRoot -ChildPath 'EguibarIT.SecurityPS.psd1'
 
     # Import the module manifest
@@ -63,7 +63,14 @@ Describe 'EguibarIT.SecurityPS Module Structure' {
         }
 
         It 'Should require ActiveDirectory module' {
-            $Manifest.RequiredModules | Should -Contain 'ActiveDirectory'
+            $RequiredModuleNames = $Manifest.RequiredModules | ForEach-Object {
+                if ($_ -is [string]) {
+                    $_
+                } else {
+                    $_.Name
+                }
+            }
+            $RequiredModuleNames | Should -Contain 'ActiveDirectory'
         }
 
         It 'Should be compatible with Desktop and Core editions' {
@@ -104,8 +111,8 @@ Describe 'EguibarIT.SecurityPS Module Structure' {
             Join-Path -Path $ModuleRoot -ChildPath '.gitignore' | Should -Exist
         }
 
-        It 'Should have PSScriptAnalyzerSettings.psd1' {
-            Join-Path -Path $ModuleRoot -ChildPath 'PSScriptAnalyzerSettings.psd1' | Should -Exist
+        It 'Should have VS Code settings file' {
+            Join-Path -Path $ModuleRoot -ChildPath '.vscode\\settings.json' | Should -Exist
         }
 
         It 'Should have the root module file' {
