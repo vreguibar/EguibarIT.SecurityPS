@@ -80,6 +80,7 @@
         'Get-GoldenTicketDetection',
         'Get-MachineAccountQuota',
         'Get-PasswordSprayAttack',
+        'Get-SkeletonKeyDetection',
         'Get-SIDHistoryInjectionAttack',
         'Get-SilverTicketDetection',
         'Get-UnconstrainedDelegation',
@@ -116,6 +117,7 @@
                 'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'SAML',
                 'DCShadow', 'ReplicationAttack',
                 'SIDHistory', 'SIDHistoryInjection',
+                'SkeletonKey', 'LSASS',
                 'ADFS', 'ADCS', 'PKI', 'CertificateServices',
                 'FiveEyes', 'Remediation', 'Compliance',
                 'Kerberos', 'NTLM', 'Federation'
