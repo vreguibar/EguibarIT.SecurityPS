@@ -18,7 +18,7 @@ This function performs comprehensive GPP password discovery and risk analysis:
 3. **Risk Analysis** - Assesses account type, privilege level, and exposure
 4. **Remediation Guidance** - Provides specific cleanup and mitigation steps
 
-**Vulnerability Background:** 
+**Vulnerability Background:**
 Prior to MS14-025 (May 2014), Group Policy Preferences allowed storing passwords for:
 - Local Administrator accounts
 - Scheduled tasks
@@ -149,7 +149,7 @@ if ($Results.Count -gt 0) {
         -Subject "CRITICAL: GPP Passwords Detected in SYSVOL" `
         -Body "Found $($Results.Count) GPP password entries requiring immediate removal!" `
         -Priority High
-    
+
     # Export for remediation team
     $Results | Export-Csv 'C:\SecurityAlerts\GPPPasswords-Found.csv' -NoTypeInformation
 } else {
@@ -255,7 +255,7 @@ foreach ($Finding in $Results) {
     Write-Host "  File: $($Finding.FileName)"
     Write-Host "  User: $($Finding.UserName)"
     Write-Host "  Password: $($Finding.Password)"  # Document for rotation
-    
+
     # Open GPO for editing
     Write-Host "`nAction: Remove password from preference item in GPMC"
     Write-Host "  Path: Computer/User Configuration -> Preferences -> Control Panel Settings"
@@ -277,20 +277,20 @@ foreach ($Finding in $Results) {
     # Backup original file
     $BackupFile = Join-Path $BackupPath (Split-Path $Finding.GPOPath -Leaf)
     Copy-Item -Path $Finding.GPOPath -Destination $BackupFile
-    
+
     # Load XML
     [xml]$XML = Get-Content $Finding.GPOPath
-    
+
     # Remove cpassword attribute
     $Nodes = $XML.SelectNodes("//*[@cpassword]")
     foreach ($Node in $Nodes) {
         $Node.RemoveAttribute('cpassword')
         Write-Host "Removed cpassword from $($Finding.GPOPath)"
     }
-    
+
     # Save modified XML
     $XML.Save($Finding.GPOPath)
-    
+
     # Increment GPO version to trigger replication
     $GPO = Get-GPO -Guid $Finding.GPOGUID
     $GPO.MakeAclConsistent()  # Forces version increment
@@ -333,7 +333,7 @@ foreach ($Account in $ServiceAccounts) {
     Write-Host "`nMigrate to gMSA: $($Account.UserName)"
     Write-Host "  Current Password: $($Account.Password)"
     Write-Host "  Used in GPO: $($Account.GPOName)"
-    
+
     # gMSA creation template (customize per service)
     Write-Host "`nExample gMSA creation:"
     Write-Host "  New-ADServiceAccount -Name 'svc-$($Account.UserName)' -DNSHostName 'svc-$($Account.UserName).contoso.com' -PrincipalsAllowedToRetrieveManagedPassword 'CN=Server01,OU=Servers,DC=contoso,DC=com'"
@@ -351,15 +351,15 @@ if ($Results.Count -eq 0) {
 } else {
     # Compare to baseline
     $BaselinePath = 'C:\SecurityBaselines\GPPPasswords-Baseline.csv'
-    
+
     if (Test-Path $BaselinePath) {
         $Baseline = Import-Csv $BaselinePath
-        
+
         # Alert on NEW passwords (should never happen after remediation)
-        $NewPasswords = $Results | Where-Object { 
-            $_.GPOGUID -notin $Baseline.GPOGUID 
+        $NewPasswords = $Results | Where-Object {
+            $_.GPOGUID -notin $Baseline.GPOGUID
         }
-        
+
         if ($NewPasswords.Count -gt 0) {
             Send-MailMessage -To 'security@contoso.com' `
                 -Subject "CRITICAL: New GPP Passwords Detected" `
@@ -408,8 +408,8 @@ foreach ($GPO in $ByGPO) {
 
 # Step 5: Document credentials for rotation
 Write-Host "`nCredential Rotation Required:"
-$Results | Select-Object UserName, Password, AccountType | 
-    Sort-Object AccountType | 
+$Results | Select-Object UserName, Password, AccountType |
+    Sort-Object AccountType |
     Format-Table -AutoSize
 ```
 
@@ -429,7 +429,7 @@ if ($Match) {
     Write-Host "  Exposure: $($Match.ExposureAgeDays) days"
     Write-Host "  GPO: $($Match.GPOName)"
     Write-Host "  Group Membership: $($Match.GroupMembership)"
-    
+
     # Check for recent access to this GPO
     $GPOPath = $Match.GPOPath
     Write-Host "`nRecent access to affected GPO file:"

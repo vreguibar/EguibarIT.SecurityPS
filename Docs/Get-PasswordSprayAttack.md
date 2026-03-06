@@ -235,7 +235,7 @@ foreach ($Attack in $Results | Where-Object { $_.Severity -in @('Critical', 'Hig
     # Block at Windows Firewall
     New-NetFirewallRule -DisplayName "Block Password Spray: $($Attack.SourceIP)" `
         -Direction Inbound -RemoteAddress $Attack.SourceIP -Action Block -Enabled True
-    
+
     Write-Warning "Blocked IP $($Attack.SourceIP) targeting $($Attack.UniqueTargetAccounts) accounts"
 }
 ```
@@ -266,7 +266,7 @@ $Results = Get-PasswordSprayAttack -TimeSpanMinutes 20 -FailureThreshold 8
 if ($Results.Count -gt 0) {
     # Export to SIEM
     $Results | Export-Csv "D:\SIEM\Import\PasswordSpray-$(Get-Date -Format 'yyyyMMdd-HHmm').csv" -NoTypeInformation
-    
+
     # Send alert for critical findings
     $Critical = $Results | Where-Object { $_.Severity -eq 'Critical' }
     if ($Critical.Count -gt 0) {

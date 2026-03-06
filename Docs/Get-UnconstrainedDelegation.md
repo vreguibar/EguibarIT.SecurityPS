@@ -95,9 +95,9 @@ Full risk analysis with CSV export and verbose logging.
 
 ```powershell
 $Results = Get-UnconstrainedDelegation
-$UnprotectedPrivileged = $Results | Where-Object { 
-    $_.Severity -eq 'Critical' -and 
-    $_.IsPrivilegedAccount -eq $true 
+$UnprotectedPrivileged = $Results | Where-Object {
+    $_.Severity -eq 'Critical' -and
+    $_.IsPrivilegedAccount -eq $true
 }
 
 if ($UnprotectedPrivileged.Count -gt 0) {
@@ -253,9 +253,9 @@ Returns `PSCustomObject` array with the following properties:
 ```powershell
 # Identify unprotected privileged accounts
 $Results = Get-UnconstrainedDelegation
-$Unprotected = $Results | Where-Object { 
-    $_.IsPrivilegedAccount -eq $true -and 
-    $_.ProtectedFromDelegation -eq $false 
+$Unprotected = $Results | Where-Object {
+    $_.IsPrivilegedAccount -eq $true -and
+    $_.ProtectedFromDelegation -eq $false
 }
 
 # Enable delegation protection for privileged accounts
@@ -265,7 +265,7 @@ foreach ($Account in $Unprotected) {
 }
 
 # Verify protection
-Get-ADUser -Filter {adminCount -eq 1} -Properties AccountNotDelegated | 
+Get-ADUser -Filter {adminCount -eq 1} -Properties AccountNotDelegated |
     Where-Object { $_.AccountNotDelegated -eq $false }
 # Should return no results
 ```
@@ -298,14 +298,14 @@ foreach ($Computer in $Computers) {
     Write-Host "`nReviewing: $($Computer.SamAccountName)"
     Write-Host "  Description: $($Computer.Description)"
     Write-Host "  OU: $($Computer.DistinguishedName -replace '^CN=[^,]+,')"
-    
+
     # Document current delegation usage
     Write-Host "  Action Required: Identify services requiring delegation"
     Write-Host "  Migration: Configure Resource-Based Constrained Delegation"
-    
+
     # Example RBCD configuration (requires service analysis):
     # Set-ADComputer -Identity $Computer.SamAccountName -PrincipalsAllowedToDelegateToAccount @{Add='CN=WebServer01,OU=Servers,DC=contoso,DC=com'}
-    
+
     # After migration, remove unconstrained delegation
     # Set-ADAccountControl -Identity $Computer.SamAccountName -TrustedForDelegation $false
 }
@@ -322,7 +322,7 @@ foreach ($User in $UserAccounts) {
     # Remove delegation flag
     Set-ADAccountControl -Identity $User.SamAccountName -TrustedForDelegation $false
     Write-Warning "Removed unconstrained delegation from user: $($User.SamAccountName)"
-    
+
     # If service account requires delegation, investigate constrained delegation
     Write-Host "  Review: Does $($User.SamAccountName) require constrained delegation?"
 }
@@ -338,10 +338,10 @@ $Results = Get-UnconstrainedDelegation -ExportPath 'C:\SecurityReports'
 $BaselinePath = 'C:\SecurityBaselines\UnconstrainedDelegation-Baseline.csv'
 if (Test-Path $BaselinePath) {
     $Baseline = Import-Csv $BaselinePath
-    $New = $Results | Where-Object { 
-        $_.SamAccountName -notin $Baseline.SamAccountName 
+    $New = $Results | Where-Object {
+        $_.SamAccountName -notin $Baseline.SamAccountName
     }
-    
+
     if ($New.Count -gt 0) {
         Send-MailMessage -To 'security@contoso.com' `
             -Subject "ALERT: New Unconstrained Delegation Configuration" `
@@ -377,9 +377,9 @@ foreach ($Account in $DisabledAccounts) {
 }
 
 # Step 4: Protect all privileged accounts (automated)
-$PrivilegedAccounts = $Results | Where-Object { 
-    $_.IsPrivilegedAccount -eq $true -and 
-    $_.ProtectedFromDelegation -eq $false 
+$PrivilegedAccounts = $Results | Where-Object {
+    $_.IsPrivilegedAccount -eq $true -and
+    $_.ProtectedFromDelegation -eq $false
 }
 foreach ($Account in $PrivilegedAccounts) {
     Set-ADAccountControl -Identity $Account.SamAccountName -AccountNotDelegated $true
@@ -387,9 +387,9 @@ foreach ($Account in $PrivilegedAccounts) {
 }
 
 # Step 5: Manual review required for active delegated systems
-$RequiresReview = $Results | Where-Object { 
-    $_.Enabled -eq $true -and 
-    $_.Severity -in @('High', 'Medium') 
+$RequiresReview = $Results | Where-Object {
+    $_.Enabled -eq $true -and
+    $_.Severity -in @('High', 'Medium')
 }
 
 if ($RequiresReview.Count -gt 0) {
@@ -405,14 +405,14 @@ if ($RequiresReview.Count -gt 0) {
 $Results = Get-UnconstrainedDelegation -ExcludeDomainControllers
 
 # Identify recently modified delegation configurations
-$Recent = $Results | Where-Object { 
-    ((Get-Date) - $_.Created).TotalDays -lt 30 
+$Recent = $Results | Where-Object {
+    ((Get-Date) - $_.Created).TotalDays -lt 30
 }
 
 if ($Recent.Count -gt 0) {
     Write-Warning "Recently created unconstrained delegation configurations:"
     $Recent | Format-Table SamAccountName, Created, Description
-    
+
     # Investigate each
     foreach ($Object in $Recent) {
         # Check for suspicious activity
@@ -421,7 +421,7 @@ if ($Recent.Count -gt 0) {
             ID = 4624  # Logon events
             StartTime = $Object.Created
         } | Where-Object { $_.Properties[5].Value -eq $Object.SamAccountName }
-        
+
         Write-Host "`nActivity for $($Object.SamAccountName) since creation:"
         $Events | Select-Object TimeCreated, @{N='SourceIP';E={$_.Properties[18].Value}}
     }

@@ -270,7 +270,7 @@ if ($Result.IsCompromiseLikely) {
     # Send alert to SOC
     Send-MailMessage -To 'soc@contoso.com' -Subject "CRITICAL: Golden Ticket Attack Detected" `
         -Body "Detection count: $($Result.CriticalDetections). Review logs immediately."
-    
+
     # Export to SIEM
     $Result.DetectionDetails | Export-Csv 'D:\SIEM\Import\GoldenTicket.csv' -NoTypeInformation
 }

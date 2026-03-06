@@ -235,12 +235,12 @@ foreach ($Account in $ServiceAccounts) {
     if ($Account.MemberOf -match 'Domain Admins') {
         Write-Warning "Service account $($Account.SamAccountName) is in Domain Admins!"
     }
-    
+
     # Check password age
     if ($Account.PasswordLastSet -lt (Get-Date).AddDays(-365)) {
         Write-Warning "Service account $($Account.SamAccountName) has password older than 1 year!"
     }
-    
+
     # Check Password Never Expires
     if ($Account.PasswordNeverExpires) {
         Write-Warning "Service account $($Account.SamAccountName) has 'Password Never Expires' set!"
@@ -294,7 +294,7 @@ $Results = Get-ADKerberoastingPattern -TimeSpanMinutes 35 -ThresholdCount 8
 if ($Results.Count -gt 0) {
     # Export to SIEM
     $Results | Export-Csv "D:\SIEM\Import\Kerberoast-$(Get-Date -Format 'yyyyMMdd-HHmm').csv" -NoTypeInformation
-    
+
     # Alert on critical findings
     $Critical = $Results | Where-Object { $_.Severity -eq 'Critical' }
     if ($Critical.Count -gt 0) {

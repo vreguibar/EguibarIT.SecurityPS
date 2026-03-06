@@ -262,9 +262,9 @@ Security auditing must be enabled for:
 ```powershell
 # Identify service accounts with weak passwords
 Get-ADUser -Filter {ServicePrincipalName -like '*'} -Properties PasswordLastSet, PasswordNeverExpires |
-    Where-Object { 
-        $_.PasswordLastSet -lt (Get-Date).AddDays(-365) -or 
-        $_.PasswordNeverExpires -eq $true 
+    Where-Object {
+        $_.PasswordLastSet -lt (Get-Date).AddDays(-365) -or
+        $_.PasswordNeverExpires -eq $true
     } |
     Select-Object SamAccountName, PasswordLastSet, PasswordNeverExpires
 

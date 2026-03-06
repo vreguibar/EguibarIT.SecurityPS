@@ -252,13 +252,13 @@ $RBCDComputers = $Results.SuspiciousComputers | Where-Object { $_.RBCDConfigured
 
 foreach ($Computer in $RBCDComputers) {
     Write-Warning "RBCD configured on: $($Computer.ComputerName)"
-    
+
     # Option 1: Remove RBCD delegation
     Set-ADComputer -Identity $Computer.DistinguishedName -PrincipalsAllowedToDelegateToAccount $null
-    
+
     # Option 2: Disable account for investigation
     # Disable-ADAccount -Identity $Computer.DistinguishedName
-    
+
     # Option 3: Delete rogue account (after investigation)
     # Remove-ADComputer -Identity $Computer.DistinguishedName -Confirm
 }
@@ -295,7 +295,7 @@ MachineAccountQuota Audit Results:
 IMMEDIATE ACTION REQUIRED if RBCD count > 0!
 Review attached reports for details.
 "@
-    
+
     Send-MailMessage -To 'security@contoso.com' -Subject "MachineAccountQuota Audit Alert" -Body $Body
 }
 
