@@ -168,9 +168,8 @@ Describe 'Security Validation' {
     Context 'Security Patterns' {
 
         BeforeAll {
-            #script:AllPowerShellFiles = Get-ChildItem -Path $ModuleRoot -Filter '*.ps1' -Recurse |
-            Where-Object { $_.Directory.Name -notin @('Tests', 'Docs', 'Examples')     $_.Directory.Name -notin @('Tests', 'Docs', 'Examples')
-            }
+            $script:AllPowerShellFiles = Get-ChildItem -Path $ModuleRoot -Filter '*.ps1' -Recurse |
+                Where-Object { $_.Directory.Name -notin @('Tests', 'Docs', 'Examples') }
         }
 
         It 'Should not contain hardcoded passwords' {

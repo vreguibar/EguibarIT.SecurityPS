@@ -74,6 +74,7 @@
         'Get-ADASREPRoastingVulnerability',
         'Get-ADCSVulnerability',
         'Get-ADKerberoastingPattern',
+        'Get-DCShadowAttack',
         'Get-DCSyncAttack',
         'Get-GoldenSAMLDetection',
         'Get-GoldenTicketDetection',
@@ -112,6 +113,7 @@
                 'Windows', 'ActiveDirectory', 'AD', 'Security', 'Audit',
                 'CredentialTheft', 'PassTheHash', 'PassTheTicket',
                 'GoldenTicket', 'SilverTicket', 'GoldenSAML', 'SAML',
+                'DCShadow', 'ReplicationAttack',
                 'ADFS', 'ADCS', 'PKI', 'CertificateServices',
                 'FiveEyes', 'Remediation', 'Compliance',
                 'Kerberos', 'NTLM', 'Federation'
