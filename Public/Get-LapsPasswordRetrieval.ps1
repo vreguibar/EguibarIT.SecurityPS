@@ -175,7 +175,6 @@
         ##############################
         # Variables Definition
 
-        [datetime]$StartDate = (Get-Date).AddDays(-$DaysBack)
         [System.Collections.Generic.List[PSCustomObject]]$Results = [System.Collections.Generic.List[PSCustomObject]]::new()
 
         Write-Verbose -Message ('Reviewing LAPS inventory for the last {0} day(s).' -f $DaysBack)

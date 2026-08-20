@@ -376,15 +376,15 @@
 
                 Write-Verbose -Message ('Found {0} AD FS/Admin events to analyze' -f $AdfsAdminEvents.Count)
 
-                foreach ($Event in $AdfsAdminEvents) {
-                    [string]$EventMessage = $Event.Message
+                foreach ($Iem in $AdfsAdminEvents) {
+                    [string]$EventMessage = $Iem.Message
 
                     foreach ($Keyword in $Keywords) {
                         if ($EventMessage -match [regex]::Escape($Keyword)) {
                             [string]$EventDetails = ('AD FS/Admin: [{0}] {1} at {2}: matched keyword ''{3}''' -f
-                                $Event.Id,
-                                $Event.LevelDisplayName,
-                                $Event.TimeCreated,
+                                $Iem.Id,
+                                $Iem.LevelDisplayName,
+                                $Iem.TimeCreated,
                                 $Keyword
                             )
 
@@ -400,8 +400,8 @@
                             if ($IncludeEvents) {
                                 [void]$EventsOut.Add([PSCustomObject]@{
                                         Log     = 'ADFS/Admin'
-                                        Id      = $Event.Id
-                                        Time    = $Event.TimeCreated
+                                        Id      = $Iem.Id
+                                        Time    = $Iem.TimeCreated
                                         Keyword = $Keyword
                                         Message = $EventMessage
                                     })
@@ -432,8 +432,8 @@
 
                 Write-Verbose -Message ('Found {0} Security 4663 events to analyze' -f $SecurityEvents.Count)
 
-                foreach ($Event in $SecurityEvents) {
-                    [xml]$EventXml = $Event.ToXml()
+                foreach ($Item in $SecurityEvents) {
+                    [xml]$EventXml = $Item.ToXml()
                     [string]$ObjectName = ($EventXml.Event.EventData.Data | Where-Object { $_.Name -eq 'ObjectName' }).'#text'
 
                     if ($ObjectName -and $ObjectName -like ('{0}*' -f $MachineKeysPath)) {
@@ -463,8 +463,8 @@
                             [void]$EventsOut.Add([PSCustomObject]@{
                                     Log     = 'Security'
                                     Id      = 4663
-                                    Time    = $Event.TimeCreated
-                                    Message = $Event.Message
+                                    Time    = $Item.TimeCreated
+                                    Message = $Item.Message
                                 })
                         } #end if
                     } #end if
