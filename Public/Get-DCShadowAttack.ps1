@@ -123,6 +123,7 @@
                 Write-Error                            | Microsoft.PowerShell.Utility
                 Write-Output                           | Microsoft.PowerShell.Utility
                 Get-FunctionDisplay                    | EguibarIT.SecurityPS
+                Set-StrictMode                         | PowerShell Core
 
         .NOTES
             Version:         1.0.0
@@ -176,7 +177,10 @@
             Position = 1
         )]
         [ValidateRange(1, 365)]
-        [PSDefaultValue(Help = 'Default: 30 days', Value = 30)]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $DaysBack = 30,
 
@@ -191,8 +195,30 @@
         $IncludeEvents
     )
 
-    Begin {
+    begin {
+
+
+        # Set strict mode
         Set-StrictMode -Version Latest
+
+        # Display function header if variables exist
+        if ($null -ne $Variables -and
+            $null -ne $Variables.HeaderSecurity) {
+
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
+                (Get-Date).ToString('dd/MMM/yyyy'),
+                $MyInvocation.Mycommand,
+                (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
+            )
+            Write-Verbose -Message $txt
+        } #end If
+
+        ##############################
+        # Module imports
+
+        ##############################
+        # Variables Definition
 
         [datetime]$StartDate = (Get-Date).AddDays(-$DaysBack)
         [datetime]$AuditTimestamp = Get-Date
@@ -206,21 +232,9 @@
         [System.Collections.ArrayList]$LegitimateDCHostNames = @()
         [System.Collections.ArrayList]$LegitimateDCs = @()
 
-        # Display function header if variables exist
-        if ($null -ne $Variables -and
-            $null -ne $Variables.HeaderSecurity) {
-
-            $txt = ($Variables.HeaderSecurity -f
-                $MyInvocation.InvocationName,
-                (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
-            )
-            Write-Verbose -Message $txt
-        } #end if
-
-        Write-Verbose -Message ('Starting DCShadow detection. Analysis window starts at {0}' -f $StartDate)
     } #end Begin
 
-    Process {
+    process {
         try {
             Write-Progress -Activity 'DCShadow Detection Audit' -Status 'Phase 1/5: Building DC baseline' -PercentComplete 10
 
@@ -252,17 +266,17 @@
                 foreach ($DCComputer in $DCComputerAccounts) {
                     if ($DCComputer.DistinguishedName -notmatch 'OU=Domain Controllers') {
                         $RogueDCFinding = [PSCustomObject]@{
-                            PSTypeName         = 'EguibarIT.DCShadowAttack.Finding'
-                            Timestamp          = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-                            FindingType        = 'Rogue DC Computer Account'
-                            RiskLevel          = 'Critical'
-                            DomainController   = $null
-                            EventID            = $null
-                            ObjectName         = $DCComputer.Name
-                            DistinguishedName  = $DCComputer.DistinguishedName
-                            OriginatingDC      = $null
-                            Indicator          = 'Computer object with PrimaryGroupID=516 exists outside Domain Controllers OU'
-                            Recommendation     = 'Investigate immediately and validate whether object is unauthorized or stale DCShadow artifact'
+                            PSTypeName        = 'EguibarIT.DCShadowAttack.Finding'
+                            Timestamp         = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+                            FindingType       = 'Rogue DC Computer Account'
+                            RiskLevel         = 'Critical'
+                            DomainController  = $null
+                            EventID           = $null
+                            ObjectName        = $DCComputer.Name
+                            DistinguishedName = $DCComputer.DistinguishedName
+                            OriginatingDC     = $null
+                            Indicator         = 'Computer object with PrimaryGroupID=516 exists outside Domain Controllers OU'
+                            Recommendation    = 'Investigate immediately and validate whether object is unauthorized or stale DCShadow artifact'
                         }
 
                         [void]$Findings.Add($RogueDCFinding)
@@ -327,7 +341,9 @@
                         }
 
                         [void]$Findings.Add($Finding)
-                        if ($IncludeEvents.IsPresent) { [void]$RawEvents.Add($Event5137) }
+                        if ($IncludeEvents.IsPresent) {
+                            [void]$RawEvents.Add($Event5137)
+                        }
                     } #end foreach
 
                     [hashtable]$Splat5141 = @{
@@ -365,7 +381,9 @@
                             }
 
                             [void]$Findings.Add($Finding)
-                            if ($IncludeEvents.IsPresent) { [void]$RawEvents.Add($Event5141) }
+                            if ($IncludeEvents.IsPresent) {
+                                [void]$RawEvents.Add($Event5141)
+                            }
                         } #end if
                     } #end foreach
 
@@ -404,7 +422,9 @@
                                 }
 
                                 [void]$Findings.Add($Finding)
-                                if ($IncludeEvents.IsPresent) { [void]$RawEvents.Add($Event4742) }
+                                if ($IncludeEvents.IsPresent) {
+                                    [void]$RawEvents.Add($Event4742)
+                                }
                             } #end if
                         } #end if
                     } #end foreach
@@ -643,7 +663,9 @@
                         }
 
                         [void]$Findings.Add($Finding)
-                        if ($IncludeEvents.IsPresent) { [void]$RawEvents.Add($AdminEvent) }
+                        if ($IncludeEvents.IsPresent) {
+                            [void]$RawEvents.Add($AdminEvent)
+                        }
                     } #end foreach
                 } catch {
                     Write-Warning -Message ('Failed to query AdminSDHolder changes from {0}: {1}' -f $DCHost, $_.Exception.Message)
@@ -658,7 +680,7 @@
         } #end try-catch
     } #end Process
 
-    End {
+    end {
         try {
             [int]$CriticalCount = ($Findings | Where-Object { $_.RiskLevel -eq 'Critical' }).Count
             [int]$HighCount = ($Findings | Where-Object { $_.RiskLevel -eq 'High' }).Count
@@ -697,36 +719,41 @@
             } #end if
 
             $AuditResult = [PSCustomObject]@{
-                PSTypeName          = 'EguibarIT.DCShadowAttack'
-                AuditTimestamp      = $AuditTimestamp
-                AnalysisWindowDays  = $DaysBack
+                PSTypeName            = 'EguibarIT.DCShadowAttack'
+                AuditTimestamp        = $AuditTimestamp
+                AnalysisWindowDays    = $DaysBack
                 DomainControllerCount = $LegitimateDCs.Count
-                TotalFindings       = $Findings.Count
-                CriticalCount       = $CriticalCount
-                HighCount           = $HighCount
-                MediumCount         = $MediumCount
-                IsCompromiseLikely  = ($CriticalCount -gt 0)
-                Findings            = $Findings
-                RecommendedActions  = $RecommendedActions
-                ExportedReports     = $ExportedReports
-                IncludedRawEvents   = if ($IncludeEvents.IsPresent) { $RawEvents } else { $null }
+                TotalFindings         = $Findings.Count
+                CriticalCount         = $CriticalCount
+                HighCount             = $HighCount
+                MediumCount           = $MediumCount
+                IsCompromiseLikely    = ($CriticalCount -gt 0)
+                Findings              = $Findings
+                RecommendedActions    = $RecommendedActions
+                ExportedReports       = $ExportedReports
+                IncludedRawEvents     = if ($IncludeEvents.IsPresent) {
+                    $RawEvents
+                } else {
+                    $null
+                }
             }
 
             Write-Output -InputObject $AuditResult
-
-            if ($null -ne $Variables -and
-                $null -ne $Variables.FooterSecurity) {
-
-                $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
-                    'finished auditing DCShadow attack indicators.'
-                )
-                Write-Verbose -Message $txt
-            } #end if
 
         } catch {
             Write-Error -Message ('Failed to finalize DCShadow detection results: {0}' -f $_.Exception.Message)
             throw
         } #end try-catch
+
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting group policy preferences passwords.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
+
     } #end End
 
 } #end Function Get-DCShadowAttack

@@ -124,6 +124,7 @@
                 Name                                   | Module
                 ---------------------------------------|--------------------------
                 Get-FunctionDisplay                    | EguibarIT.SecurityPS
+                Set-StrictMode                         | PowerShell Core
                 Get-ADDomain                           | Microsoft.ActiveDirectory.Management
                 Get-ADDomainController                 | Microsoft.ActiveDirectory.Management
                 Get-Acl                                | Microsoft.PowerShell.Security
@@ -181,7 +182,10 @@
             Position = 0
         )]
         [ValidateRange(1, 365)]
-        [PSDefaultValue(Help = 'Default: 7 days')]
+        [PSDefaultValue(
+            Help = 'Default: 7 days',
+            Value = 7
+        )]
         [int]
         $TimeSpanDays = 7,
 
@@ -199,7 +203,10 @@
                 }
                 return $true
             })]
-        [PSDefaultValue(Help = 'Default: C:\Logs')]
+        [PSDefaultValue(
+            Help = 'Default: C:\Logs',
+            Value = 'C:\Logs'
+        )]
         [string]
         $ExportPath = 'C:\Logs',
 
@@ -210,7 +217,10 @@
             HelpMessage = 'Enable real-time monitoring mode (Ctrl+C to stop)',
             Position = 2
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $MonitorRealTime,
 
@@ -221,20 +231,25 @@
             HelpMessage = 'Include legitimate DC replication events in output',
             Position = 3
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $IncludeNormalEvents
     )
 
     begin {
 
+        # Set strict mode
         Set-StrictMode -Version Latest
 
         # Display function header if variables exist
         if ($null -ne $Variables -and
-            $null -ne $Variables.HeaderDelegation) {
+            $null -ne $Variables.HeaderSecurity) {
 
-            $txt = ($Variables.HeaderDelegation -f
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
                 (Get-Date).ToString('dd/MMM/yyyy'),
                 $MyInvocation.Mycommand,
                 (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)

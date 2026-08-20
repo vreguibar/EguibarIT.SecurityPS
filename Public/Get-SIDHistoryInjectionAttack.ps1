@@ -163,7 +163,10 @@
         )]
         [ValidateNotNullOrEmpty()]
         [Alias('ExportPath', 'Path')]
-        [PSDefaultValue(Help = 'Default: Desktop\SIDHistoryAudit')]
+        [PSDefaultValue(
+            Help = 'Default: Desktop\SIDHistoryAudit',
+            Value = 'Desktop\SIDHistoryAudit'
+        )]
         [string]
         $OutputPath = (Join-Path -Path $env:USERPROFILE -ChildPath 'Desktop\SIDHistoryAudit'),
 
@@ -175,7 +178,10 @@
             Position = 1
         )]
         [ValidateRange(1, 365)]
-        [PSDefaultValue(Help = 'Default: 90 days', Value = 90)]
+        [PSDefaultValue(
+            Help = 'Default: 90 days',
+            Value = 90
+        )]
         [int]
         $DaysBack = 90,
 
@@ -190,7 +196,7 @@
         $CheckTrusts
     )
 
-    Begin {
+    begin {
         Set-StrictMode -Version Latest
 
         [datetime]$AuditTimestamp = Get-Date
@@ -209,7 +215,7 @@
         [hashtable]$PrivilegedSidMap = [hashtable]::New([StringComparer]::OrdinalIgnoreCase)
 
         [System.Collections.Generic.HashSet[string]]$LegitimateDCIdentitySet =
-            [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
         # Display function header if variables exist
         if ($null -ne $Variables -and
@@ -242,7 +248,7 @@
         Write-Verbose -Message ('Starting SID History injection detection. Analysis window starts at {0}' -f $StartDate)
     } #end Begin
 
-    Process {
+    process {
         try {
             Write-Progress -Activity 'SID History Injection Detection Audit' `
                 -Status 'Phase 1/5: Enumerating accounts with SID History' -PercentComplete 10
@@ -680,21 +686,21 @@
             } #end if
 
             [PSCustomObject]$AuditResult = [PSCustomObject]@{
-                PSTypeName                 = 'EguibarIT.SIDHistoryInjectionAttack'
-                AuditTimestamp             = $AuditTimestamp
-                AnalysisWindowDays         = $DaysBack
-                UsersWithSIDHistoryCount   = $UsersWithSIDHistory.Count
+                PSTypeName                   = 'EguibarIT.SIDHistoryInjectionAttack'
+                AuditTimestamp               = $AuditTimestamp
+                AnalysisWindowDays           = $DaysBack
+                UsersWithSIDHistoryCount     = $UsersWithSIDHistory.Count
                 ComputersWithSIDHistoryCount = $ComputersWithSIDHistory.Count
-                AccountsWithSIDHistoryCount = ($UsersWithSIDHistory.Count + $ComputersWithSIDHistory.Count)
-                TotalFindings              = $Findings.Count
-                CriticalCount              = $CriticalCount
-                HighCount                  = $HighCount
-                MediumCount                = $MediumCount
-                IsCompromiseLikely         = ($CriticalCount -gt 0)
-                TrustsChecked              = $CheckTrusts.IsPresent
-                Findings                   = $Findings
-                RecommendedActions         = $RecommendedActions
-                ExportedReports            = $ExportedReports
+                AccountsWithSIDHistoryCount  = ($UsersWithSIDHistory.Count + $ComputersWithSIDHistory.Count)
+                TotalFindings                = $Findings.Count
+                CriticalCount                = $CriticalCount
+                HighCount                    = $HighCount
+                MediumCount                  = $MediumCount
+                IsCompromiseLikely           = ($CriticalCount -gt 0)
+                TrustsChecked                = $CheckTrusts.IsPresent
+                Findings                     = $Findings
+                RecommendedActions           = $RecommendedActions
+                ExportedReports              = $ExportedReports
             }
 
             Write-Output -InputObject $AuditResult
@@ -704,7 +710,7 @@
         } #end try-catch
     } #end Process
 
-    End {
+    end {
         if ($null -ne $Variables -and
             $null -ne $Variables.FooterSecurity) {
 

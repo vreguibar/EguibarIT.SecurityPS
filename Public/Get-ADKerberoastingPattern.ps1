@@ -162,6 +162,10 @@
             HelpMessage = 'Number of minutes to look back in event logs (default: 60)'
         )]
         [ValidateRange(1, 10080)]  # 1 minute to 7 days
+        [PSDefaultValue(
+            Help = 'Default minutes to look back in event logs is 60',
+            Value = 60
+        )]
         [int]
         $TimeSpanMinutes = 60,
 
@@ -173,6 +177,10 @@
             HelpMessage = 'Minimum number of ticket requests to trigger alert (default: 10)'
         )]
         [ValidateRange(1, 1000)]
+        [PSDefaultValue(
+            Help = 'Default minimum number of ticket requests to trigger alert is 10',
+            Value = 10
+        )]
         [int]
         $ThresholdCount = 10,
 
@@ -200,15 +208,24 @@
 
     begin {
 
+        # Set strict mode
         Set-StrictMode -Version Latest
 
+        # Display function header if variables exist
+        if ($null -ne $Variables -and
+            $null -ne $Variables.HeaderSecurity) {
+
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
+                (Get-Date).ToString('dd/MMM/yyyy'),
+                $MyInvocation.Mycommand,
+                (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
+            )
+            Write-Verbose -Message $txt
+        } #end If
+
+        ##############################
         # Module imports
-        $txt = ($Variables.HeaderSecurity -f
-            (Get-Date).ToShortDateString(),
-            $MyInvocation.Mycommand,
-            (Get-FunctionDisplay -HashTable $PsBoundParameters -Verbose:$False)
-        )
-        Write-Verbose -Message $txt
 
         ##############################
         # Variables Definition

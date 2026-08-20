@@ -1,4 +1,4 @@
-﻿Function Get-DomainTrustBypass {
+﻿function Get-DomainTrustBypass {
     <#
         .SYNOPSIS
             Detects Active Directory domain trust bypass attacks through trust enumeration, SID filtering violations, and cross-forest authentication monitoring.
@@ -211,7 +211,10 @@
             Position = 1
         )]
         [ValidateRange(1, 365)]
-        [PSDefaultValue(Help = 'Default: 30 days')]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $DaysBack = 30,
 
@@ -229,7 +232,10 @@
                 }
                 return $true
             })]
-        [PSDefaultValue(Help = 'Default: C:\SecurityAudits\DomainTrust')]
+        [PSDefaultValue(
+            Help = 'Default: C:\SecurityAudits\DomainTrust',
+            Value = 'C:\SecurityAudits\DomainTrust'
+        )]
         [string]
         $ExportPath = 'C:\SecurityAudits\DomainTrust',
 
@@ -240,7 +246,10 @@
             HelpMessage = 'Include detailed trust relationship enumeration',
             Position = 3
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $IncludeTrustEnumeration,
 
@@ -251,7 +260,10 @@
             HelpMessage = 'Enable enhanced cross-forest authentication monitoring',
             Position = 4
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $MonitorCrossForestAuth,
 
@@ -262,20 +274,25 @@
             HelpMessage = 'Scan all domains in the forest',
             Position = 5
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $CheckAllDomains
     )
 
     begin {
 
+        # Set strict mode
         Set-StrictMode -Version Latest
 
         # Display function header if variables exist
         if ($null -ne $Variables -and
-            $null -ne $Variables.HeaderDelegation) {
+            $null -ne $Variables.HeaderSecurity) {
 
-            $txt = ($Variables.HeaderDelegation -f
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
                 (Get-Date).ToString('dd/MMM/yyyy'),
                 $MyInvocation.Mycommand,
                 (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
@@ -339,17 +356,17 @@
         }
 
         $TrustAttributes = @{
-            1       = 'Non-Transitive'
-            2       = 'Uplevel Clients Only'
-            4       = 'Quarantined Domain (SID Filtering)'
-            8       = 'Forest Transitive'
-            16      = 'Cross-Organization (Selective Authentication)'
-            32      = 'Within Forest'
-            64      = 'Treat as External'
-            128     = 'Reserved'
-            256     = 'Reserved2'
-            512     = 'Reserved3'
-            1024    = 'Reserved4'
+            1    = 'Non-Transitive'
+            2    = 'Uplevel Clients Only'
+            4    = 'Quarantined Domain (SID Filtering)'
+            8    = 'Forest Transitive'
+            16   = 'Cross-Organization (Selective Authentication)'
+            32   = 'Within Forest'
+            64   = 'Treat as External'
+            128  = 'Reserved'
+            256  = 'Reserved2'
+            512  = 'Reserved3'
+            1024 = 'Reserved4'
         }
 
         # Well-known privileged SIDs (use module SID mappings)
@@ -362,25 +379,25 @@
 
         # Initialize audit result object
         [PSCustomObject]$AuditResult = [PSCustomObject]@{
-            DomainName                      = $null
-            ForestName                      = $null
-            AuditTimestamp                  = Get-Date
-            TrustCount                      = 0
-            ExternalTrustCount              = 0
-            TrustsWithSIDFilteringDisabled  = 0
-            TrustsWithoutSelectiveAuth      = 0
-            SIDFilteringViolations          = 0
-            SelectiveAuthViolations         = 0
-            CrossForestTGTRequests          = 0
-            PrivilegedCrossTrustAuth        = 0
-            HighRiskIndicators              = 0
-            MediumRiskIndicators            = 0
-            RiskLevel                       = 'Unknown'
-            IsSecure                        = $false
-            RecommendedActions              = @()
-            ExportedReports                 = @()
-            TrustRelationships              = @()
-            ViolationEvents                 = @()
+            DomainName                     = $null
+            ForestName                     = $null
+            AuditTimestamp                 = Get-Date
+            TrustCount                     = 0
+            ExternalTrustCount             = 0
+            TrustsWithSIDFilteringDisabled = 0
+            TrustsWithoutSelectiveAuth     = 0
+            SIDFilteringViolations         = 0
+            SelectiveAuthViolations        = 0
+            CrossForestTGTRequests         = 0
+            PrivilegedCrossTrustAuth       = 0
+            HighRiskIndicators             = 0
+            MediumRiskIndicators           = 0
+            RiskLevel                      = 'Unknown'
+            IsSecure                       = $false
+            RecommendedActions             = @()
+            ExportedReports                = @()
+            TrustRelationships             = @()
+            ViolationEvents                = @()
         }
 
         # Get current domain and forest
@@ -482,25 +499,32 @@
                         $AuditResult.MediumRiskIndicators++
                     } #end if
 
-                    if ($Trust.Direction -eq 2) {  # Outbound only
+                    if ($Trust.Direction -eq 2) {
+                        # Outbound only
                         [void]$RiskFactors.Add('Outbound-only trust (resource exposure)')
                     } #end if
 
                     $TrustObject = [PSCustomObject]@{
-                        TrustName             = $Trust.Name
-                        TrustPartner          = $Trust.Target
-                        Direction             = $TrustDirectionName
-                        TrustType             = $TrustTypeName
-                        IsExternalTrust       = $IsExternalTrust
-                        ForestTransitive      = $Trust.ForestTransitive
-                        SIDFilteringEnabled   = $SIDFilteringEnabled
-                        SelectiveAuthEnabled  = $SelectiveAuthEnabled
-                        TrustAttributes       = $Trust.TrustAttributes
-                        WhenCreated           = $Trust.WhenCreated
-                        WhenChanged           = $Trust.WhenChanged
-                        RiskFactors           = $RiskFactors -join '; '
-                        RiskLevel             = if ($RiskFactors.Count -ge 2) { 'High' } elseif ($RiskFactors.Count -eq 1) { 'Medium' } else { 'Low' }
-                        DetectionDate         = Get-Date
+                        TrustName            = $Trust.Name
+                        TrustPartner         = $Trust.Target
+                        Direction            = $TrustDirectionName
+                        TrustType            = $TrustTypeName
+                        IsExternalTrust      = $IsExternalTrust
+                        ForestTransitive     = $Trust.ForestTransitive
+                        SIDFilteringEnabled  = $SIDFilteringEnabled
+                        SelectiveAuthEnabled = $SelectiveAuthEnabled
+                        TrustAttributes      = $Trust.TrustAttributes
+                        WhenCreated          = $Trust.WhenCreated
+                        WhenChanged          = $Trust.WhenChanged
+                        RiskFactors          = $RiskFactors -join '; '
+                        RiskLevel            = if ($RiskFactors.Count -ge 2) {
+                            'High'
+                        } elseif ($RiskFactors.Count -eq 1) {
+                            'Medium'
+                        } else {
+                            'Low'
+                        }
+                        DetectionDate        = Get-Date
                     }
 
                     [void]$TrustRelationships.Add($TrustObject)
@@ -555,17 +579,17 @@
                         Write-Warning -Message ('SID FILTERING BYPASS ATTEMPT: From {0} (SID: {1}) on {2}' -f $EventData['TargetUserName'], $EventData['TargetSid'], $Event.TimeCreated)
 
                         $ViolationEvent = [PSCustomObject]@{
-                            DC                = $DC
-                            TimeCreated       = $Event.TimeCreated
-                            EventID           = $Event.Id
-                            TargetUserName    = $EventData['TargetUserName']
-                            TargetDomain      = $EventData['TargetDomainName']
-                            TargetSID         = $EventData['TargetSid']
-                            SourceSID         = $EventData['SidList']
-                            ViolationType     = 'SID Filtering Bypass'
-                            RiskLevel         = 'Critical'
-                            Description       = 'Attempt to authenticate with unauthorized SID in SIDHistory'
-                            DetectionDate     = Get-Date
+                            DC             = $DC
+                            TimeCreated    = $Event.TimeCreated
+                            EventID        = $Event.Id
+                            TargetUserName = $EventData['TargetUserName']
+                            TargetDomain   = $EventData['TargetDomainName']
+                            TargetSID      = $EventData['TargetSid']
+                            SourceSID      = $EventData['SidList']
+                            ViolationType  = 'SID Filtering Bypass'
+                            RiskLevel      = 'Critical'
+                            Description    = 'Attempt to authenticate with unauthorized SID in SIDHistory'
+                            DetectionDate  = Get-Date
                         }
 
                         [void]$SIDFilteringViolations.Add($ViolationEvent)
@@ -595,17 +619,17 @@
                         } #end foreach
 
                         $ViolationEvent = [PSCustomObject]@{
-                            DC                = $DC
-                            TimeCreated       = $Event.TimeCreated
-                            EventID           = $Event.Id
-                            TargetUserName    = $EventData['TargetUserName']
-                            TargetDomain      = $EventData['TargetDomainName']
-                            TargetSID         = $EventData['TargetSid']
-                            SourceSID         = $EventData['SidList']
-                            ViolationType     = 'SID Filtering Blocked'
-                            RiskLevel         = 'Medium'
-                            Description       = 'SID filtering successfully blocked unauthorized SID'
-                            DetectionDate     = Get-Date
+                            DC             = $DC
+                            TimeCreated    = $Event.TimeCreated
+                            EventID        = $Event.Id
+                            TargetUserName = $EventData['TargetUserName']
+                            TargetDomain   = $EventData['TargetDomainName']
+                            TargetSID      = $EventData['TargetSid']
+                            SourceSID      = $EventData['SidList']
+                            ViolationType  = 'SID Filtering Blocked'
+                            RiskLevel      = 'Medium'
+                            Description    = 'SID filtering successfully blocked unauthorized SID'
+                            DetectionDate  = Get-Date
                         }
 
                         [void]$SIDFilteringViolations.Add($ViolationEvent)
@@ -660,18 +684,18 @@
                             Write-Verbose -Message ('  Cross-trust TGT: {0}\{1} from {2}' -f $TargetDomain, $EventData['TargetUserName'], $EventData['IpAddress'])
 
                             $SelectiveAuthEvent = [PSCustomObject]@{
-                                DC                = $DC
-                                TimeCreated       = $Event.TimeCreated
-                                EventID           = $Event.Id
-                                TargetUserName    = $EventData['TargetUserName']
-                                TargetDomain      = $TargetDomain
-                                ServiceName       = $EventData['ServiceName']
-                                IpAddress         = $EventData['IpAddress']
-                                PreAuthType       = $EventData['PreAuthType']
-                                ViolationType     = 'Cross-Trust TGT Request'
-                                RiskLevel         = 'Medium'
-                                Description       = 'TGT requested from external domain'
-                                DetectionDate     = Get-Date
+                                DC             = $DC
+                                TimeCreated    = $Event.TimeCreated
+                                EventID        = $Event.Id
+                                TargetUserName = $EventData['TargetUserName']
+                                TargetDomain   = $TargetDomain
+                                ServiceName    = $EventData['ServiceName']
+                                IpAddress      = $EventData['IpAddress']
+                                PreAuthType    = $EventData['PreAuthType']
+                                ViolationType  = 'Cross-Trust TGT Request'
+                                RiskLevel      = 'Medium'
+                                Description    = 'TGT requested from external domain'
+                                DetectionDate  = Get-Date
                             }
 
                             [void]$SelectiveAuthViolations.Add($SelectiveAuthEvent)
@@ -726,16 +750,16 @@
                                 Write-Verbose -Message ('  Cross-forest TGT renewal: {0}\{1}' -f $TargetDomain, $EventData['TargetUserName'])
 
                                 $TGTEvent = [PSCustomObject]@{
-                                    DC                = $DC
-                                    TimeCreated       = $Event.TimeCreated
-                                    EventID           = $Event.Id
-                                    TargetUserName    = $EventData['TargetUserName']
-                                    TargetDomain      = $TargetDomain
-                                    IpAddress         = $EventData['IpAddress']
-                                    EventType         = 'TGT Renewal'
-                                    RiskLevel         = 'Low'
-                                    Description       = 'Cross-forest TGT renewed (potential persistence)'
-                                    DetectionDate     = Get-Date
+                                    DC             = $DC
+                                    TimeCreated    = $Event.TimeCreated
+                                    EventID        = $Event.Id
+                                    TargetUserName = $EventData['TargetUserName']
+                                    TargetDomain   = $TargetDomain
+                                    IpAddress      = $EventData['IpAddress']
+                                    EventType      = 'TGT Renewal'
+                                    RiskLevel      = 'Low'
+                                    Description    = 'Cross-forest TGT renewed (potential persistence)'
+                                    DetectionDate  = Get-Date
                                 }
 
                                 [void]$CrossForestTGTs.Add($TGTEvent)
@@ -767,15 +791,15 @@
                     Write-Warning -Message ('PRIVILEGED CROSS-TRUST AUTH: {0}\{1} at {2}' -f $Event.TargetDomain, $Event.TargetUserName, $Event.TimeCreated)
 
                     $PrivAuthEvent = [PSCustomObject]@{
-                        DC                = $Event.DC
-                        TimeCreated       = $Event.TimeCreated
-                        EventID           = $Event.EventID
-                        TargetUserName    = $Event.TargetUserName
-                        TargetDomain      = $Event.TargetDomain
-                        IpAddress         = $Event.IpAddress
-                        RiskLevel         = 'Critical'
-                        Description       = 'Privileged account authenticated across trust boundary'
-                        DetectionDate     = Get-Date
+                        DC             = $Event.DC
+                        TimeCreated    = $Event.TimeCreated
+                        EventID        = $Event.EventID
+                        TargetUserName = $Event.TargetUserName
+                        TargetDomain   = $Event.TargetDomain
+                        IpAddress      = $Event.IpAddress
+                        RiskLevel      = 'Critical'
+                        Description    = 'Privileged account authenticated across trust boundary'
+                        DetectionDate  = Get-Date
                     }
 
                     [void]$PrivilegedCrossTrustAuth.Add($PrivAuthEvent)
@@ -909,6 +933,15 @@
             Write-Warning -Message ('SECURITY ALERT: Domain trust environment risk level is {0}' -f $AuditResult.RiskLevel)
             Write-Warning -Message 'Review recommended actions immediately'
         } #end if
+
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting group policy preferences passwords.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
         # Return audit result object
         Write-Output -InputObject $AuditResult

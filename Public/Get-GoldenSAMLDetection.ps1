@@ -156,7 +156,10 @@
             Position = 0
         )]
         [ValidateRange(1, 8760)]
-        [PSDefaultParameterValue(Help = 'Default is 24 hours')]
+        [PSDefaultParameterValue(
+            Help = 'Default is 24 hours',
+            Value = 24
+        )]
         [int]
         $Hours = 24,
 
@@ -168,7 +171,10 @@
             Position = 1
         )]
         [ValidateNotNullOrEmpty()]
-        [PSDefaultParameterValue(Help = 'Default exports to C:\Reports with timestamp')]
+        [PSDefaultParameterValue(
+            Help = 'Default exports to C:\Reports with timestamp',
+            Value = 'C:\Reports\GoldenSAML-Findings-<timestamp>.csv'
+        )]
         [string]
         $ExportPath = ('C:\Reports\GoldenSAML-Findings-{0}.csv' -f (Get-Date -Format 'yyyyMMdd-HHmmss')),
 
@@ -182,14 +188,17 @@
         $IncludeEvents
     )
 
-    Begin {
+    begin {
+
+        # Set strict mode
         Set-StrictMode -Version Latest
 
         # Display function header if variables exist
         if ($null -ne $Variables -and
-            $null -ne $Variables.HeaderDelegation) {
+            $null -ne $Variables.HeaderSecurity) {
 
-            $txt = ($Variables.HeaderDelegation -f
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
                 (Get-Date).ToString('dd/MMM/yyyy'),
                 $MyInvocation.Mycommand,
                 (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
@@ -233,7 +242,7 @@
 
     } #end Begin
 
-    Process {
+    process {
 
         Write-Verbose -Message 'Starting Golden SAML detection scan...'
 
@@ -298,10 +307,10 @@
 
                     # Fallback: search certificate store
                     $TokenCerts = Get-ChildItem -Path 'Cert:\LocalMachine\My' -ErrorAction SilentlyContinue |
-                    Where-Object {
-                        $_.EnhancedKeyUsageList.FriendlyName -contains 'Token Signing' -or
-                        $_.Subject -match 'ADFS'
-                    }
+                        Where-Object {
+                            $_.EnhancedKeyUsageList.FriendlyName -contains 'Token Signing' -or
+                            $_.Subject -match 'ADFS'
+                        }
                 } #end try-catch
 
                 foreach ($Cert in $TokenCerts) {
@@ -551,7 +560,7 @@
 
     } #end Process
 
-    End {
+    end {
 
         # Calculate severity counts
         $HighSeverityCount = ($Results | Where-Object { $_.Severity -eq 'HIGH' }).Count
@@ -605,7 +614,11 @@
                         Info              = $InfoCount
                         Findings          = $Results
                         RawEventsIncluded = [bool]$IncludeEvents
-                        RawEvents         = if ($IncludeEvents) { $EventsOut } else { @() }
+                        RawEvents         = if ($IncludeEvents) {
+                            $EventsOut
+                        } else {
+                            @()
+                        }
                     }
 
                     $JsonData | ConvertTo-Json -Depth 6 | Out-File -Encoding UTF8 -FilePath $JsonPath -ErrorAction Stop
@@ -630,24 +643,24 @@
 
         # Create summary object
         [PSCustomObject]$Summary = [PSCustomObject]@{
-            PSTypeName           = 'EguibarIT.GoldenSAMLDetection'
-            ScanDate             = Get-Date
-            WindowHours          = $Hours
-            ADFSPresent          = $AdfsPresent
-            FindingsCount        = $Results.Count
-            HighSeverityCount    = $HighSeverityCount
-            MediumSeverityCount  = $MediumSeverityCount
-            InfoCount            = $InfoCount
-            IsSecure             = ($HighSeverityCount -eq 0 -and $MediumSeverityCount -eq 0)
-            RecommendedAction    = if ($HighSeverityCount -gt 0) {
+            PSTypeName          = 'EguibarIT.GoldenSAMLDetection'
+            ScanDate            = Get-Date
+            WindowHours         = $Hours
+            ADFSPresent         = $AdfsPresent
+            FindingsCount       = $Results.Count
+            HighSeverityCount   = $HighSeverityCount
+            MediumSeverityCount = $MediumSeverityCount
+            InfoCount           = $InfoCount
+            IsSecure            = ($HighSeverityCount -eq 0 -and $MediumSeverityCount -eq 0)
+            RecommendedAction   = if ($HighSeverityCount -gt 0) {
                 'IMMEDIATE ACTION REQUIRED: Review high-severity findings and implement remediation steps'
             } elseif ($MediumSeverityCount -gt 0) {
                 'Review medium-severity findings and schedule remediation'
             } else {
                 'No critical issues detected; continue regular monitoring'
             }
-            ExportedFiles        = $ExportedFiles
-            DetailedFindings     = $Results
+            ExportedFiles       = $ExportedFiles
+            DetailedFindings    = $Results
         }
 
         # Display function footer if variables exist

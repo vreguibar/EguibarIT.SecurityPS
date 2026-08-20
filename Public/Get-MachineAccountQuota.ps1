@@ -182,7 +182,10 @@
             HelpMessage = 'Number of days to look back for computer account creation events.',
             Position = 0)]
         [ValidateRange(1, 36500)]
-        [PSDefaultValue(Help = 'Default: 30 days')]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $TimeSpanDays = 30,
 
@@ -193,7 +196,10 @@
             HelpMessage = 'List of authorized users/groups allowed to create computer accounts.',
             Position = 1)]
         [ValidateNotNullOrEmpty()]
-        [PSDefaultValue(Help = 'Default: Domain Admins, Enterprise Admins, Account Operators')]
+        [PSDefaultValue(
+            Help = 'Default: Domain Admins, Enterprise Admins, Account Operators',
+            Value = 'Domain Admins, Enterprise Admins, Account Operators'
+        )]
         [string[]]
         $AuthorizedCreators = @('Domain Admins', 'Enterprise Admins', 'Account Operators'),
 
@@ -204,7 +210,10 @@
             HelpMessage = 'Path to export detailed CSV and TXT reports.',
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [PSDefaultValue(Help = 'Default: C:\Logs')]
+        [PSDefaultValue(
+            Help = 'Default: C:\Logs',
+            Value = 'C:\Logs'
+        )]
         [string]
         $ExportPath = 'C:\Logs'
     )

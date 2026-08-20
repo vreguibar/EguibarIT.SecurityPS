@@ -1,147 +1,147 @@
 ﻿function Find-GPPPasswords {
 
     <#
-    .SYNOPSIS
-        Discovers and decrypts Group Policy Preferences (GPP) passwords stored in SYSVOL.
+        .SYNOPSIS
+            Discovers and decrypts Group Policy Preferences (GPP) passwords stored in SYSVOL.
 
-    .DESCRIPTION
-        Comprehensive GPP password audit tool that performs multi-phase security analysis:
+        .DESCRIPTION
+            Comprehensive GPP password audit tool that performs multi-phase security analysis:
 
-        PHASE 1 - DISCOVERY: Scans SYSVOL for XML files containing encrypted passwords (cpassword attribute)
-        PHASE 2 - DECRYPTION: Automatically decrypts passwords using Microsoft's published AES-256 key
-        PHASE 3 - ANALYSIS: Categorizes findings by password type, age, and risk level
-        PHASE 4 - REMEDIATION: Provides step-by-step cleanup guidance with automated deletion option
+            PHASE 1 - DISCOVERY: Scans SYSVOL for XML files containing encrypted passwords (cpassword attribute)
+            PHASE 2 - DECRYPTION: Automatically decrypts passwords using Microsoft's published AES-256 key
+            PHASE 3 - ANALYSIS: Categorizes findings by password type, age, and risk level
+            PHASE 4 - REMEDIATION: Provides step-by-step cleanup guidance with automated deletion option
 
-        CRITICAL SECURITY CONTEXT:
-        GPP passwords are encrypted with AES-256, but Microsoft published the decryption key in 2012.
-        ANY domain user can extract and decrypt these passwords from SYSVOL. Microsoft deprecated
-        GPP passwords in 2014 (KB2862966) but did NOT remove existing passwords from SYSVOL.
+            CRITICAL SECURITY CONTEXT:
+            GPP passwords are encrypted with AES-256, but Microsoft published the decryption key in 2012.
+            ANY domain user can extract and decrypt these passwords from SYSVOL. Microsoft deprecated
+            GPP passwords in 2014 (KB2862966) but did NOT remove existing passwords from SYSVOL.
 
-        Organizations often have 10+ year old GPP passwords in SYSVOL from Windows Server 2008 R2 era.
-        These credentials may provide Local Administrator, Service Account, or Domain Admin access.
+            Organizations often have 10+ year old GPP passwords in SYSVOL from Windows Server 2008 R2 era.
+            These credentials may provide Local Administrator, Service Account, or Domain Admin access.
 
-        MITRE ATT&CK FRAMEWORK:
-        - T1552.006: Unsecured Credentials - Group Policy Preferences
-        - T1003: OS Credential Dumping
-        - T1078: Valid Accounts
+            MITRE ATT&CK FRAMEWORK:
+            - T1552.006: Unsecured Credentials - Group Policy Preferences
+            - T1003: OS Credential Dumping
+            - T1078: Valid Accounts
 
-        BEST PRACTICE: Remove ALL GPP password files from SYSVOL and rotate exposed credentials immediately.
+            BEST PRACTICE: Remove ALL GPP password files from SYSVOL and rotate exposed credentials immediately.
 
-    .PARAMETER ExportReport
-        If specified, exports detailed findings to CSV, JSON, and TXT reports.
-        Reports are saved to the path specified in ExportPath parameter.
+        .PARAMETER ExportReport
+            If specified, exports detailed findings to CSV, JSON, and TXT reports.
+            Reports are saved to the path specified in ExportPath parameter.
 
-    .PARAMETER DecryptPasswords
-        If specified, attempts to decrypt discovered passwords using Microsoft's published AES-256 key.
-        Default: $true (passwords are decrypted automatically for impact assessment).
+        .PARAMETER DecryptPasswords
+            If specified, attempts to decrypt discovered passwords using Microsoft's published AES-256 key.
+            Default: $true (passwords are decrypted automatically for impact assessment).
 
-    .PARAMETER DeleteFiles
-        If specified, uses ShouldProcess to delete GPP password files from SYSVOL after confirmation.
-        Supports -WhatIf and -Confirm parameters.
-        WARNING: Only use after rotating all exposed passwords!
+        .PARAMETER DeleteFiles
+            If specified, uses ShouldProcess to delete GPP password files from SYSVOL after confirmation.
+            Supports -WhatIf and -Confirm parameters.
+            WARNING: Only use after rotating all exposed passwords!
 
-    .PARAMETER ExportPath
-        Directory path where reports will be exported when using -ExportReport.
-        Directory will be created if it does not exist.
+        .PARAMETER ExportPath
+            Directory path where reports will be exported when using -ExportReport.
+            Directory will be created if it does not exist.
 
-    .EXAMPLE
-        Find-GPPPasswords
+        .EXAMPLE
+            Find-GPPPasswords
 
-        Scans SYSVOL for GPP passwords, decrypts them, and displays results to console.
-        No files are deleted or exported.
+            Scans SYSVOL for GPP passwords, decrypts them, and displays results to console.
+            No files are deleted or exported.
 
-    .EXAMPLE
-        Find-GPPPasswords -ExportReport -ExportPath 'C:\SecurityAudits'
+        .EXAMPLE
+            Find-GPPPasswords -ExportReport -ExportPath 'C:\SecurityAudits'
 
-        Performs full GPP password scan with decryption and exports detailed reports
-        (CSV, JSON, TXT) to C:\SecurityAudits directory.
+            Performs full GPP password scan with decryption and exports detailed reports
+            (CSV, JSON, TXT) to C:\SecurityAudits directory.
 
-    .EXAMPLE
-        Find-GPPPasswords -DeleteFiles -Confirm:$false
+        .EXAMPLE
+            Find-GPPPasswords -DeleteFiles -Confirm:$false
 
-        Scans for GPP passwords and automatically deletes discovered files without confirmation.
-        WARNING: Only use after rotating all exposed credentials!
+            Scans for GPP passwords and automatically deletes discovered files without confirmation.
+            WARNING: Only use after rotating all exposed credentials!
 
-    .EXAMPLE
-        Find-GPPPasswords -DeleteFiles -WhatIf
+        .EXAMPLE
+            Find-GPPPasswords -DeleteFiles -WhatIf
 
-        Previews which GPP password files would be deleted without actually removing them.
-        Safe way to test deletion operation.
+            Previews which GPP password files would be deleted without actually removing them.
+            Safe way to test deletion operation.
 
-    .EXAMPLE
-        Find-GPPPasswords -DecryptPasswords:$false -ExportReport
+        .EXAMPLE
+            Find-GPPPasswords -DecryptPasswords:$false -ExportReport
 
-        Scans for GPP passwords but does NOT decrypt them (only shows encrypted values).
-        Useful for initial discovery pass or compliance audits where decryption is restricted.
+            Scans for GPP passwords but does NOT decrypt them (only shows encrypted values).
+            Useful for initial discovery pass or compliance audits where decryption is restricted.
 
-    .INPUTS
-        None. This function does not accept pipeline input.
+        .INPUTS
+            None. This function does not accept pipeline input.
 
-    .OUTPUTS
-        PSCustomObject
-        Returns custom object with PSTypeName 'EguibarIT.Security.GPPPasswordAudit' containing:
-        - DomainName: Name of the scanned Active Directory domain
-        - SYSVOLPath: UNC path to SYSVOL Policies folder
-        - TotalXMLFiles: Total count of XML files scanned in SYSVOL
-        - PasswordFilesFound: Count of files containing GPP passwords
-        - PasswordsDecrypted: Boolean indicating if passwords were decrypted
-        - OldestPasswordAge: Age in years of the oldest discovered password
-        - PasswordsByType: Hashtable categorizing passwords by file type
-        - IsSecure: Boolean indicating if SYSVOL is free of GPP passwords
-        - RiskLevel: String ('None', 'Critical') indicating security posture
-        - FilesDeleted: Boolean indicating if files were removed
-        - ReportsExported: Array of file paths to exported reports
-        - AuditDate: Timestamp of the scan
+        .OUTPUTS
+            PSCustomObject
+            Returns custom object with PSTypeName 'EguibarIT.Security.GPPPasswordAudit' containing:
+            - DomainName: Name of the scanned Active Directory domain
+            - SYSVOLPath: UNC path to SYSVOL Policies folder
+            - TotalXMLFiles: Total count of XML files scanned in SYSVOL
+            - PasswordFilesFound: Count of files containing GPP passwords
+            - PasswordsDecrypted: Boolean indicating if passwords were decrypted
+            - OldestPasswordAge: Age in years of the oldest discovered password
+            - PasswordsByType: Hashtable categorizing passwords by file type
+            - IsSecure: Boolean indicating if SYSVOL is free of GPP passwords
+            - RiskLevel: String ('None', 'Critical') indicating security posture
+            - FilesDeleted: Boolean indicating if files were removed
+            - ReportsExported: Array of file paths to exported reports
+            - AuditDate: Timestamp of the scan
 
-    .NOTES
-        Used Functions:
-          Name                                                                  ║ Module/Namespace
-          ══════════════════════════════════════════════════════════════════════╬══════════════════════════════
-          Write-Verbose                                                         ║ Microsoft.PowerShell.Utility
-          Write-Warning                                                         ║ Microsoft.PowerShell.Utility
-          Write-Error                                                           ║ Microsoft.PowerShell.Utility
-          Get-Date                                                              ║ Microsoft.PowerShell.Utility
-          Test-Path                                                             ║ Microsoft.PowerShell.Management
-          New-Item                                                              ║ Microsoft.PowerShell.Management
-          Get-ChildItem                                                         ║ Microsoft.PowerShell.Management
-          Get-Content                                                           ║ Microsoft.PowerShell.Management
-          Remove-Item                                                           ║ Microsoft.PowerShell.Management
-          Export-Csv                                                            ║ Microsoft.PowerShell.Utility
-          ConvertTo-Json                                                        ║ Microsoft.PowerShell.Utility
-          Out-File                                                              ║ Microsoft.PowerShell.Utility
-          Decrypt-GPPPassword                                                   ║ EguibarIT.SecurityPS (Private)
-          Get-FunctionDisplay                                                   ║ EguibarIT.SecurityPS (Private)
-          [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain() ║ System.DirectoryServices
-          [System.Convert]::FromBase64String()                                  ║ System
-          [System.Security.Cryptography.AesCryptoServiceProvider]::new()        ║ System.Security.Cryptography
-          [System.Text.Encoding]::Unicode                                       ║ System.Text
+        .NOTES
+            Used Functions:
+            Name                                                                  ║ Module/Namespace
+            ══════════════════════════════════════════════════════════════════════╬══════════════════════════════
+            Write-Verbose                                                         ║ Microsoft.PowerShell.Utility
+            Write-Warning                                                         ║ Microsoft.PowerShell.Utility
+            Write-Error                                                           ║ Microsoft.PowerShell.Utility
+            Get-Date                                                              ║ Microsoft.PowerShell.Utility
+            Test-Path                                                             ║ Microsoft.PowerShell.Management
+            New-Item                                                              ║ Microsoft.PowerShell.Management
+            Get-ChildItem                                                         ║ Microsoft.PowerShell.Management
+            Get-Content                                                           ║ Microsoft.PowerShell.Management
+            Remove-Item                                                           ║ Microsoft.PowerShell.Management
+            Export-Csv                                                            ║ Microsoft.PowerShell.Utility
+            ConvertTo-Json                                                        ║ Microsoft.PowerShell.Utility
+            Out-File                                                              ║ Microsoft.PowerShell.Utility
+            Decrypt-GPPPassword                                                   ║ EguibarIT.SecurityPS (Private)
+            Get-FunctionDisplay                                                   ║ EguibarIT.SecurityPS (Private)
+            [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain() ║ System.DirectoryServices
+            [System.Convert]::FromBase64String()                                  ║ System
+            [System.Security.Cryptography.AesCryptoServiceProvider]::new()        ║ System.Security.Cryptography
+            [System.Text.Encoding]::Unicode                                       ║ System.Text
 
-    .NOTES
-        Version:         1.1
-        DateModified:    2/Mar/2026
-        LastModifiedBy:  Vicente Rodriguez Eguibar
-                vicente@eguibarit.com
-                Eguibar IT
-                http://www.eguibarit.com
+        .NOTES
+            Version:         1.1
+            DateModified:    2/Mar/2026
+            LastModifiedBy:  Vicente Rodriguez Eguibar
+                    vicente@eguibarit.com
+                    Eguibar IT
+                    http://www.eguibarit.com
 
-    .LINK
-        https://github.com/vreguibar/EguibarIT.SecurityPS
+        .LINK
+            https://github.com/vreguibar/EguibarIT.SecurityPS
 
-    .LINK
-        https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-gppref/2c15cbf0-f086-4c74-8b70-1f2fa45dd4be
+        .LINK
+            https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-gppref/2c15cbf0-f086-4c74-8b70-1f2fa45dd4be
 
-    .LINK
-        https://support.microsoft.com/kb/2862966
+        .LINK
+            https://support.microsoft.com/kb/2862966
 
-    .COMPONENT
-        EguibarIT.SecurityPS
+        .COMPONENT
+            EguibarIT.SecurityPS
 
-    .ROLE
-        Security Auditor, Penetration Tester, Security Operations
+        .ROLE
+            Security Auditor, Penetration Tester, Security Operations
 
-    .FUNCTIONALITY
-        Discovers and decrypts Group Policy Preferences passwords in SYSVOL, provides risk assessment,
-        and supports automated remediation with file deletion and detailed reporting.
+        .FUNCTIONALITY
+            Discovers and decrypts Group Policy Preferences passwords in SYSVOL, provides risk assessment,
+            and supports automated remediation with file deletion and detailed reporting.
     #>
 
     [CmdletBinding(
@@ -170,7 +170,10 @@
             HelpMessage = 'Decrypt discovered passwords using Microsoft published AES-256 key. Default: $true',
             Position = 1
         )]
-        [PSDefaultValue(Help = 'Passwords are decrypted by default for impact assessment', Value = $true)]
+        [PSDefaultValue(
+            Help = 'Passwords are decrypted by default for impact assessment',
+            Value = $true
+        )]
         [bool]
         $DecryptPasswords = $true,
 
@@ -192,7 +195,10 @@
             Position = 3
         )]
         [ValidateNotNullOrEmpty()]
-        [PSDefaultValue(Help = 'Reports exported to C:\Logs by default', Value = 'C:\Logs')]
+        [PSDefaultValue(
+            Help = 'Reports exported to C:\Logs by default',
+            Value = 'C:\Logs'
+        )]
         [string]
         $ExportPath = 'C:\Logs'
 
@@ -203,19 +209,26 @@
         # Set strict mode
         Set-StrictMode -Version Latest
 
-        # Log function invocation with parameters
-        $txt = ($Variables.HeaderSecurity -f
-            (Get-Date).ToShortDateString(),
-            $MyInvocation.Mycommand,
-            (Get-FunctionDisplay -HashTable $PsBoundParameters -Verbose:$False)
-        )
-        Write-Verbose -Message $txt
+        # Display function header if variables exist
+        if ($null -ne $Variables -and
+            $null -ne $Variables.HeaderSecurity) {
+
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
+                (Get-Date).ToString('dd/MMM/yyyy'),
+                $MyInvocation.Mycommand,
+                (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
         Write-Verbose -Message 'GPP Password Discovery & Decryption | MITRE ATT&CK T1552.006'
 
-        # ========================================
+        ##############################
+        # Module imports
+
+        ##############################
         # Variables Definition
-        # ========================================
 
         [System.Collections.ArrayList]$FilesWithPasswords = @()
         [System.Collections.ArrayList]$AllXMLFiles = @()

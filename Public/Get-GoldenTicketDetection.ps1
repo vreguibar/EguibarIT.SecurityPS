@@ -115,7 +115,10 @@
             Position = 1
         )]
         [ValidateRange(1, 720)]
-        [PSDefaultValue(Help = 'Default: 24 hours')]
+        [PSDefaultValue(
+            Help = 'Default: 24 hours',
+            Value = 24
+        )]
         [int]
         $Hours = 24,
 
@@ -133,7 +136,10 @@
                 }
                 return $true
             })]
-        [PSDefaultValue(Help = 'Default: C:\Reports')]
+        [PSDefaultValue(
+            Help = 'Default: C:\Reports',
+            Value = 'C:\Reports'
+        )]
         [string]
         $ExportPath = 'C:\Reports',
 
@@ -159,18 +165,25 @@
     )
 
     begin {
+
+        # Set strict mode
         Set-StrictMode -Version Latest
 
+        # Display function header if variables exist
         if ($null -ne $Variables -and
             $null -ne $Variables.HeaderSecurity) {
 
+            # Log function invocation with parameters
             $txt = ($Variables.HeaderSecurity -f
                 (Get-Date).ToString('dd/MMM/yyyy'),
                 $MyInvocation.Mycommand,
-                (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$false)
+                (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
             )
             Write-Verbose -Message $txt
         } #end If
+
+        ##############################
+        # Module imports
 
         try {
             Import-MyModule -Name ActiveDirectory -Force -Verbose:$VerbosePreference -ErrorAction Stop
@@ -178,6 +191,9 @@
         } catch {
             Write-Error -Message 'ActiveDirectory module is required. Install RSAT-AD-PowerShell.' -ErrorAction Stop
         } #end try-catch
+
+        ##############################
+        # Variables Definition
 
         [datetime]$ScanStartTime = (Get-Date).AddHours(-$Hours)
         [datetime]$AuditTimestamp = Get-Date
@@ -583,7 +599,15 @@
             ServiceTicketAnomalyCount  = $ServiceTicketAnomalies.Count
             PrivilegeAnomalyCount      = $PrivilegeAnomalies.Count
             IsSecure                   = (($CriticalCount + $HighCount) -eq 0)
-            RiskLevel                  = if ($CriticalCount -gt 0) { 'Critical' } elseif ($HighCount -gt 0) { 'High' } elseif ($MediumCount -gt 0) { 'Medium' } else { 'Secure' }
+            RiskLevel                  = if ($CriticalCount -gt 0) {
+                'Critical'
+            } elseif ($HighCount -gt 0) {
+                'High'
+            } elseif ($MediumCount -gt 0) {
+                'Medium'
+            } else {
+                'Secure'
+            }
             RecommendedActions         = $RecommendedActions
             ExportedReports            = @($ExportedReports)
             KrbtgtAudit                = @($KrbtgtAudit)

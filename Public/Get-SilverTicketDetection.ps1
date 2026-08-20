@@ -119,7 +119,10 @@
             Position = 1
         )]
         [ValidateNotNullOrEmpty()]
-        [PSDefaultValue(Help = 'Default: MSSQLSvc,CIFS,HTTP,LDAP,HOST,TERMSRV')]
+        [PSDefaultValue(
+            Help = 'Default: MSSQLSvc,CIFS,HTTP,LDAP,HOST,TERMSRV',
+            Value = 'MSSQLSvc', 'CIFS', 'HTTP', 'LDAP', 'HOST', 'TERMSRV'
+        )]
         [string[]]
         $ServiceTypes = @('MSSQLSvc', 'CIFS', 'HTTP', 'LDAP', 'HOST', 'TERMSRV'),
 
@@ -131,7 +134,10 @@
             Position = 2
         )]
         [ValidateRange(1, 720)]
-        [PSDefaultValue(Help = 'Default: 24 hours')]
+        [PSDefaultValue(
+            Help = 'Default: 24 hours',
+            Value = 24
+        )]
         [int]
         $Hours = 24,
 
@@ -149,7 +155,10 @@
                 }
                 return $true
             })]
-        [PSDefaultValue(Help = 'Default: C:\Reports')]
+        [PSDefaultValue(
+            Help = 'Default: C:\Reports',
+            Value = 'C:\Reports'
+        )]
         [string]
         $ExportPath = 'C:\Reports',
 

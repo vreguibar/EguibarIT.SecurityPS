@@ -1,4 +1,4 @@
-﻿Function Get-NTDSDitExtraction {
+﻿function Get-NTDSDitExtraction {
     <#
         .SYNOPSIS
             Detects NTDS.dit extraction attempts on domain controllers through file access monitoring, process analysis, and event correlation.
@@ -112,6 +112,10 @@
             HelpMessage = 'Number of days to analyze event logs (1-365 days).',
             Position = 1)]
         [ValidateRange(1, 365)]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $DaysBack = 30,
 
@@ -121,6 +125,10 @@
             HelpMessage = 'Directory where detection results will be saved (CSV and JSON formats).',
             Position = 2)]
         [ValidateNotNullOrEmpty()]
+        [PSDefaultValue(
+            Help = 'Default: User desktop\NTDSExtractionAudit',
+            Value = '<CurrentUser>\Desktop\NTDSExtractionAudit'
+        )]
         [string]
         $ExportPath = ('{0}\Desktop\NTDSExtractionAudit' -f $env:USERPROFILE),
 
@@ -133,7 +141,7 @@
         $CheckAllDCs
     )
 
-    Begin {
+    begin {
         $txt = ($Variables.HeaderHousekeeping -f
             (Get-Date).ToShortDateString(),
             $MyInvocation.Mycommand,
@@ -169,7 +177,7 @@
 
     } #end Begin
 
-    Process {
+    process {
         try {
             # Determine which DCs to check
             [System.Collections.ArrayList]$DCList = @()
@@ -384,7 +392,11 @@
 
                             # LSASS.exe accessing ntds.dit is normal (database in use)
                             # Any OTHER process accessing ntds.dit = high-risk indicator
-                            $RiskLevel = if ($ProcessName -notmatch 'lsass\.exe') { 'Critical' } else { 'Low' }
+                            $RiskLevel = if ($ProcessName -notmatch 'lsass\.exe') {
+                                'Critical'
+                            } else {
+                                'Low'
+                            }
 
                             if ($RiskLevel -eq 'Critical') {
                                 [void]$AllFindings.Add([PSCustomObject]@{
@@ -558,7 +570,7 @@
 
     } #end Process
 
-    End {
+    end {
         # Generate summary
         Write-Verbose -Message 'Generating detection summary...'
 
@@ -569,10 +581,18 @@
 
         Write-Verbose -Message '=== Detection Summary ==='
         Write-Verbose -Message ('Total Findings: {0}' -f $AllFindings.Count)
-        if ($CriticalCount -gt 0) { Write-Warning -Message ('  Critical: {0}' -f $CriticalCount) }
-        if ($HighCount -gt 0) { Write-Warning -Message ('  High: {0}' -f $HighCount) }
-        if ($MediumCount -gt 0) { Write-Verbose -Message ('  Medium: {0}' -f $MediumCount) }
-        if ($LowCount -gt 0) { Write-Verbose -Message ('  Low: {0}' -f $LowCount) }
+        if ($CriticalCount -gt 0) {
+            Write-Warning -Message ('  Critical: {0}' -f $CriticalCount)
+        }
+        if ($HighCount -gt 0) {
+            Write-Warning -Message ('  High: {0}' -f $HighCount)
+        }
+        if ($MediumCount -gt 0) {
+            Write-Verbose -Message ('  Medium: {0}' -f $MediumCount)
+        }
+        if ($LowCount -gt 0) {
+            Write-Verbose -Message ('  Low: {0}' -f $LowCount)
+        }
 
         # Export results
         if ($AllFindings.Count -gt 0) {
@@ -605,8 +625,14 @@
             Write-Warning -Message '  7. Engage incident response team'
         } #end if
 
-        $txt = ($Variables.FooterHousekeeping -f $MyInvocation.InvocationName, 'detecting NTDS.dit extraction attempts (Event-based detection).')
-        Write-Verbose -Message $txt
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting group policy preferences passwords.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
         # Return findings
         return $AllFindings

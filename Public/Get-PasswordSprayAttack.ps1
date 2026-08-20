@@ -159,7 +159,10 @@
             HelpMessage = 'Number of minutes to look back in event logs (default: 60)'
         )]
         [ValidateRange(1, 10080)]  # 1 minute to 7 days
-        [PSDefaultValue(Help = 'Default: 60 minutes', Value = 60)]
+        [PSDefaultValue(
+            Help = 'Default: 60 minutes',
+            Value = 60
+        )]
         [int]
         $TimeSpanMinutes = 60,
 
@@ -171,7 +174,10 @@
             HelpMessage = 'Number of unique accounts from single source to trigger alert (default: 10)'
         )]
         [ValidateRange(2, 1000)]
-        [PSDefaultValue(Help = 'Default: 10 accounts', Value = 10)]
+        [PSDefaultValue(
+            Help = 'Default: 10 accounts',
+            Value = 10
+        )]
         [int]
         $FailureThreshold = 10,
 

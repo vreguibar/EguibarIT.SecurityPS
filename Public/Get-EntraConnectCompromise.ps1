@@ -1,4 +1,4 @@
-﻿Function Get-EntraConnectCompromise {
+﻿function Get-EntraConnectCompromise {
     <#
         .SYNOPSIS
             Detects Microsoft Entra Connect (Azure AD Connect) compromise indicators through configuration analysis, privileged account monitoring, and credential extraction detection.
@@ -211,7 +211,10 @@
             Position = 1
         )]
         [ValidateRange(1, 365)]
-        [PSDefaultValue(Help = 'Default: 30 days')]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $DaysBack = 30,
 
@@ -229,7 +232,10 @@
                 }
                 return $true
             })]
-        [PSDefaultValue(Help = 'Default: C:\SecurityAudits\EntraConnect')]
+        [PSDefaultValue(
+            Help = 'Default: C:\SecurityAudits\EntraConnect',
+            Value = 'C:\SecurityAudits\EntraConnect'
+        )]
         [string]
         $ExportPath = 'C:\SecurityAudits\EntraConnect',
 
@@ -251,7 +257,10 @@
             HelpMessage = 'Include Pass-Through Authentication agent integrity checks',
             Position = 4
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $CheckPTAAgents,
 
@@ -262,20 +271,25 @@
             HelpMessage = 'Scan all discovered Entra Connect servers',
             Position = 5
         )]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $ScanAllServers
     )
 
     begin {
 
+        # Set strict mode
         Set-StrictMode -Version Latest
 
         # Display function header if variables exist
         if ($null -ne $Variables -and
-            $null -ne $Variables.HeaderDelegation) {
+            $null -ne $Variables.HeaderSecurity) {
 
-            $txt = ($Variables.HeaderDelegation -f
+            # Log function invocation with parameters
+            $txt = ($Variables.HeaderSecurity -f
                 (Get-Date).ToString('dd/MMM/yyyy'),
                 $MyInvocation.Mycommand,
                 (Get-FunctionDisplay -Hashtable $PsBoundParameters -Verbose:$False)
@@ -327,20 +341,20 @@
 
         # Critical file paths for credential extraction
         $CriticalPaths = @{
-            'ADSyncDB'           = 'C:\Program Files\Microsoft Azure AD Sync\Data\ADSync.mdf'
-            'ADSyncLog'          = 'C:\Program Files\Microsoft Azure AD Sync\Data\ADSync_log.ldf'
-            'ADSyncConfig'       = 'C:\Program Files\Microsoft Azure AD Sync\Bin\miiserver.exe.config'
-            'ADSyncEncryption'   = 'C:\Program Files\Microsoft Azure AD Sync\Binn\mcrypt.dll'
-            'SchedulerConfig'    = 'C:\Program Files\Microsoft Azure AD Sync\Bin\AzureADConnect.exe'
+            'ADSyncDB'         = 'C:\Program Files\Microsoft Azure AD Sync\Data\ADSync.mdf'
+            'ADSyncLog'        = 'C:\Program Files\Microsoft Azure AD Sync\Data\ADSync_log.ldf'
+            'ADSyncConfig'     = 'C:\Program Files\Microsoft Azure AD Sync\Bin\miiserver.exe.config'
+            'ADSyncEncryption' = 'C:\Program Files\Microsoft Azure AD Sync\Binn\mcrypt.dll'
+            'SchedulerConfig'  = 'C:\Program Files\Microsoft Azure AD Sync\Bin\AzureADConnect.exe'
         }
 
         # Event IDs for compromise detection
         $MonitoredEventIDs = @{
-            'FileAccess'         = 4663    # Object Access (SQL LocalDB access)
-            'ProcessCreation'    = 4688    # Process creation (ADSyncDecrypt execution)
-            'ServiceStop'        = 7036    # Service stopped (sync service manipulation)
-            'ScheduledTask'      = 4698    # Scheduled task created (persistence)
-            'LogonType3'         = 4624    # Network logon (lateral movement to sync server)
+            'FileAccess'      = 4663    # Object Access (SQL LocalDB access)
+            'ProcessCreation' = 4688    # Process creation (ADSyncDecrypt execution)
+            'ServiceStop'     = 7036    # Service stopped (sync service manipulation)
+            'ScheduledTask'   = 4698    # Scheduled task created (persistence)
+            'LogonType3'      = 4624    # Network logon (lateral movement to sync server)
         }
 
         # Initialize audit result object
@@ -510,16 +524,22 @@
                         } #end if
 
                         $AccountObject = [PSCustomObject]@{
-                            SamAccountName    = $Account.SamAccountName
-                            DisplayName       = $Account.DisplayName
-                            Enabled           = $Account.Enabled
-                            Created           = $Account.Created
-                            LastLogonDate     = $Account.LastLogonDate
-                            PasswordLastSet   = $Account.PasswordLastSet
-                            MemberOf          = $Account.MemberOf
-                            RiskFactors       = $RiskFactors -join '; '
-                            RiskLevel         = if ($RiskFactors.Count -ge 3) { 'High' } elseif ($RiskFactors.Count -ge 1) { 'Medium' } else { 'Low' }
-                            DetectionDate     = Get-Date
+                            SamAccountName  = $Account.SamAccountName
+                            DisplayName     = $Account.DisplayName
+                            Enabled         = $Account.Enabled
+                            Created         = $Account.Created
+                            LastLogonDate   = $Account.LastLogonDate
+                            PasswordLastSet = $Account.PasswordLastSet
+                            MemberOf        = $Account.MemberOf
+                            RiskFactors     = $RiskFactors -join '; '
+                            RiskLevel       = if ($RiskFactors.Count -ge 3) {
+                                'High'
+                            } elseif ($RiskFactors.Count -ge 1) {
+                                'Medium'
+                            } else {
+                                'Low'
+                            }
+                            DetectionDate   = Get-Date
                         }
 
                         [void]$PrivilegedAccounts.Add($AccountObject)
@@ -583,18 +603,18 @@
 
                         if ($IsSuspicious) {
                             $EventObject = [PSCustomObject]@{
-                                Server            = $Server
-                                TimeCreated       = $Event.TimeCreated
-                                EventID           = $Event.Id
-                                UserName          = $EventData['SubjectUserName']
-                                UserDomain        = $EventData['SubjectDomainName']
-                                ObjectName        = $EventData['ObjectName']
-                                AccessMask        = $EventData['AccessMask']
-                                ProcessName       = $EventData['ProcessName']
-                                IsSuspicious      = $IsSuspicious
-                                RiskLevel         = 'High'
-                                Description       = 'Unauthorized access to Entra Connect SQL LocalDB database file'
-                                DetectionDate     = Get-Date
+                                Server        = $Server
+                                TimeCreated   = $Event.TimeCreated
+                                EventID       = $Event.Id
+                                UserName      = $EventData['SubjectUserName']
+                                UserDomain    = $EventData['SubjectDomainName']
+                                ObjectName    = $EventData['ObjectName']
+                                AccessMask    = $EventData['AccessMask']
+                                ProcessName   = $EventData['ProcessName']
+                                IsSuspicious  = $IsSuspicious
+                                RiskLevel     = 'High'
+                                Description   = 'Unauthorized access to Entra Connect SQL LocalDB database file'
+                                DetectionDate = Get-Date
                             }
 
                             [void]$CredentialAccessEvents.Add($EventObject)
@@ -637,17 +657,17 @@
                         Write-Warning -Message ('CRITICAL: Credential extraction tool detected: {0} by {1} at {2}' -f $EventData['NewProcessName'], $EventData['SubjectUserName'], $Event.TimeCreated)
 
                         $DecryptEvent = [PSCustomObject]@{
-                            Server          = $Server
-                            TimeCreated     = $Event.TimeCreated
-                            EventID         = $Event.Id
-                            UserName        = $EventData['SubjectUserName']
-                            UserDomain      = $EventData['SubjectDomainName']
-                            ProcessName     = $EventData['NewProcessName']
-                            CommandLine     = $EventData['CommandLine']
-                            ParentProcess   = $EventData['ParentProcessName']
-                            RiskLevel       = 'Critical'
-                            Description     = 'Entra Connect credential extraction tool executed'
-                            DetectionDate   = Get-Date
+                            Server        = $Server
+                            TimeCreated   = $Event.TimeCreated
+                            EventID       = $Event.Id
+                            UserName      = $EventData['SubjectUserName']
+                            UserDomain    = $EventData['SubjectDomainName']
+                            ProcessName   = $EventData['NewProcessName']
+                            CommandLine   = $EventData['CommandLine']
+                            ParentProcess = $EventData['ParentProcessName']
+                            RiskLevel     = 'Critical'
+                            Description   = 'Entra Connect credential extraction tool executed'
+                            DetectionDate = Get-Date
                         }
 
                         [void]$ADSyncDecryptDetections.Add($DecryptEvent)
@@ -682,12 +702,12 @@
                         $AuditResult.HighRiskIndicators++
 
                         $ConfigChange = [PSCustomObject]@{
-                            Server          = $Server
-                            TimeCreated     = Get-Date
-                            ChangeType      = 'Service Not Found'
-                            Description     = 'ADSync service is missing - possible compromise'
-                            RiskLevel       = 'Critical'
-                            DetectionDate   = Get-Date
+                            Server        = $Server
+                            TimeCreated   = Get-Date
+                            ChangeType    = 'Service Not Found'
+                            Description   = 'ADSync service is missing - possible compromise'
+                            RiskLevel     = 'Critical'
+                            DetectionDate = Get-Date
                         }
                         [void]$SyncConfigChanges.Add($ConfigChange)
                     } elseif ($ADSyncService.Status -ne 'Running') {
@@ -695,12 +715,12 @@
                         $AuditResult.MediumRiskIndicators++
 
                         $ConfigChange = [PSCustomObject]@{
-                            Server          = $Server
-                            TimeCreated     = Get-Date
-                            ChangeType      = 'Service Stopped'
-                            Description     = ('ADSync service status: {0}' -f $ADSyncService.Status)
-                            RiskLevel       = 'Medium'
-                            DetectionDate   = Get-Date
+                            Server        = $Server
+                            TimeCreated   = Get-Date
+                            ChangeType    = 'Service Stopped'
+                            Description   = ('ADSync service status: {0}' -f $ADSyncService.Status)
+                            RiskLevel     = 'Medium'
+                            DetectionDate = Get-Date
                         }
                         [void]$SyncConfigChanges.Add($ConfigChange)
                     } else {
@@ -726,12 +746,12 @@
                         Write-Verbose -Message ('  Service state change event: {0}' -f $Event.Message)
 
                         $ConfigChange = [PSCustomObject]@{
-                            Server          = $Server
-                            TimeCreated     = $Event.TimeCreated
-                            ChangeType      = 'Service State Change'
-                            Description     = $Event.Message
-                            RiskLevel       = 'Low'
-                            DetectionDate   = Get-Date
+                            Server        = $Server
+                            TimeCreated   = $Event.TimeCreated
+                            ChangeType    = 'Service State Change'
+                            Description   = $Event.Message
+                            RiskLevel     = 'Low'
+                            DetectionDate = Get-Date
                         }
                         [void]$SyncConfigChanges.Add($ConfigChange)
                     } #end foreach
@@ -762,13 +782,17 @@
                             Write-Verbose -Message ('  PTA Agent found: Status = {0}' -f $PTAService.Status)
 
                             $PTAObject = [PSCustomObject]@{
-                                Server          = $Server
-                                ServiceName     = $PTAService.Name
-                                Status          = $PTAService.Status
-                                StartType       = $PTAService.StartType
-                                RiskLevel       = if ($PTAService.Status -ne 'Running') { 'Medium' } else { 'Low' }
-                                Description     = ('PTA Agent status: {0}' -f $PTAService.Status)
-                                DetectionDate   = Get-Date
+                                Server        = $Server
+                                ServiceName   = $PTAService.Name
+                                Status        = $PTAService.Status
+                                StartType     = $PTAService.StartType
+                                RiskLevel     = if ($PTAService.Status -ne 'Running') {
+                                    'Medium'
+                                } else {
+                                    'Low'
+                                }
+                                Description   = ('PTA Agent status: {0}' -f $PTAService.Status)
+                                DetectionDate = Get-Date
                             }
 
                             [void]$PTAAgentFindings.Add($PTAObject)
@@ -950,6 +974,15 @@
             Write-Warning -Message ('SECURITY ALERT: Entra Connect environment risk level is {0}' -f $AuditResult.RiskLevel)
             Write-Warning -Message 'Review recommended actions immediately'
         } #end if
+
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting group policy preferences passwords.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
         # Return audit result object
         Write-Output -InputObject $AuditResult

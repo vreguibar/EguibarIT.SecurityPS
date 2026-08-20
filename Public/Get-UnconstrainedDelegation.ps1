@@ -171,7 +171,10 @@
             ValueFromPipelineByPropertyName = $false,
             HelpMessage = 'Include service accounts in the audit',
             Position = 0)]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $IncludeServiceAccounts,
 
@@ -180,7 +183,10 @@
             ValueFromPipelineByPropertyName = $false,
             HelpMessage = 'Check privileged account protection status',
             Position = 1)]
-        [PSDefaultValue(Help = 'Default: $false')]
+        [PSDefaultValue(
+            Help = 'Default: $false',
+            Value = $false
+        )]
         [switch]
         $CheckProtectedUsers,
 
@@ -190,7 +196,10 @@
             HelpMessage = 'Path to export detailed reports',
             Position = 2)]
         [ValidateNotNullOrEmpty()]
-        [PSDefaultValue(Help = 'Default: C:\Logs')]
+        [PSDefaultValue(
+            Help = 'Default: C:\Logs',
+            Value = 'C:\Logs'
+        )]
         [string]
         $ExportPath = 'C:\Logs'
     )

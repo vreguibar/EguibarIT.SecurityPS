@@ -136,7 +136,10 @@
         )]
         [ValidateNotNullOrEmpty()]
         [Alias('ExportPath', 'Path')]
-        [PSDefaultValue(Help = 'Default: Desktop\SkeletonKeyAudit')]
+        [PSDefaultValue(
+            Help = 'Default: Desktop\SkeletonKeyAudit',
+            Value = '<CurrentUser>\Desktop\SkeletonKeyAudit'
+        )]
         [string]
         $OutputPath = (Join-Path -Path $env:USERPROFILE -ChildPath 'Desktop\SkeletonKeyAudit'),
 
@@ -148,7 +151,10 @@
             Position = 1
         )]
         [ValidateRange(1, 365)]
-        [PSDefaultValue(Help = 'Default: 30 days', Value = 30)]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $DaysBack = 30,
 
@@ -236,26 +242,26 @@
                         -not $CredentialGuardStatus.CredentialGuardRunning) {
 
                         [void]$Findings.Add([PSCustomObject]@{
-                                PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                Timestamp                  = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-                                FindingType                = 'Credential Guard Not Enabled'
-                                RiskLevel                  = 'Critical'
-                                DomainController           = $DomainController
-                                EventID                    = $null
-                                SourceProcess              = $null
-                                SourceUser                 = $null
-                                GrantedAccess              = $null
-                                SourceIP                   = $null
-                                UniqueUserCount            = $null
-                                NTLMEventCount             = $null
-                                ServiceName                = $null
-                                ServicePath                = $null
-                                AccountName                = $null
-                                CredentialGuardConfigured  = [bool]$CredentialGuardStatus.CredentialGuardConfigured
-                                CredentialGuardRunning     = [bool]$CredentialGuardStatus.CredentialGuardRunning
-                                NTLMAuditingEnabled        = $null
-                                Indicator                  = 'Credential Guard disabled or not running; LSASS tampering risk is elevated.'
-                                Recommendation             = 'Enable Credential Guard on domain controllers and reboot to enforce protection.'
+                                PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                Timestamp                 = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+                                FindingType               = 'Credential Guard Not Enabled'
+                                RiskLevel                 = 'Critical'
+                                DomainController          = $DomainController
+                                EventID                   = $null
+                                SourceProcess             = $null
+                                SourceUser                = $null
+                                GrantedAccess             = $null
+                                SourceIP                  = $null
+                                UniqueUserCount           = $null
+                                NTLMEventCount            = $null
+                                ServiceName               = $null
+                                ServicePath               = $null
+                                AccountName               = $null
+                                CredentialGuardConfigured = [bool]$CredentialGuardStatus.CredentialGuardConfigured
+                                CredentialGuardRunning    = [bool]$CredentialGuardStatus.CredentialGuardRunning
+                                NTLMAuditingEnabled       = $null
+                                Indicator                 = 'Credential Guard disabled or not running; LSASS tampering risk is elevated.'
+                                Recommendation            = 'Enable Credential Guard on domain controllers and reboot to enforce protection.'
                             })
                     } #end if
                 } catch {
@@ -284,26 +290,26 @@
 
                     if ($null -eq $SysmonService) {
                         [void]$Findings.Add([PSCustomObject]@{
-                                PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                Timestamp                  = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-                                FindingType                = 'Sysmon Not Installed'
-                                RiskLevel                  = 'High'
-                                DomainController           = $DomainController
-                                EventID                    = $null
-                                SourceProcess              = $null
-                                SourceUser                 = $null
-                                GrantedAccess              = $null
-                                SourceIP                   = $null
-                                UniqueUserCount            = $null
-                                NTLMEventCount             = $null
-                                ServiceName                = $null
-                                ServicePath                = $null
-                                AccountName                = $null
-                                CredentialGuardConfigured  = $null
-                                CredentialGuardRunning     = $null
-                                NTLMAuditingEnabled        = $null
-                                Indicator                  = 'Sysmon is not installed; LSASS process-access telemetry is unavailable.'
-                                Recommendation             = 'Deploy Sysmon and monitor Event ID 10 for lsass.exe access.'
+                                PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                Timestamp                 = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+                                FindingType               = 'Sysmon Not Installed'
+                                RiskLevel                 = 'High'
+                                DomainController          = $DomainController
+                                EventID                   = $null
+                                SourceProcess             = $null
+                                SourceUser                = $null
+                                GrantedAccess             = $null
+                                SourceIP                  = $null
+                                UniqueUserCount           = $null
+                                NTLMEventCount            = $null
+                                ServiceName               = $null
+                                ServicePath               = $null
+                                AccountName               = $null
+                                CredentialGuardConfigured = $null
+                                CredentialGuardRunning    = $null
+                                NTLMAuditingEnabled       = $null
+                                Indicator                 = 'Sysmon is not installed; LSASS process-access telemetry is unavailable.'
+                                Recommendation            = 'Deploy Sysmon and monitor Event ID 10 for lsass.exe access.'
                             })
                         continue
                     } #end if
@@ -334,26 +340,26 @@
                         }
 
                         [void]$Findings.Add([PSCustomObject]@{
-                                PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                Timestamp                  = $Event10.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')
-                                FindingType                = 'LSASS Memory Access'
-                                RiskLevel                  = $RiskLevel
-                                DomainController           = $DomainController
-                                EventID                    = 10
-                                SourceProcess              = $SourceImage
-                                SourceUser                 = $SourceUser
-                                GrantedAccess              = $GrantedAccess
-                                SourceIP                   = $null
-                                UniqueUserCount            = $null
-                                NTLMEventCount             = $null
-                                ServiceName                = $null
-                                ServicePath                = $null
-                                AccountName                = $null
-                                CredentialGuardConfigured  = $null
-                                CredentialGuardRunning     = $null
-                                NTLMAuditingEnabled        = $null
-                                Indicator                  = 'Process accessed LSASS memory, potentially indicating credential theft or patching activity.'
-                                Recommendation             = 'Investigate source process and account immediately; isolate host if malicious tools are confirmed.'
+                                PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                Timestamp                 = $Event10.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')
+                                FindingType               = 'LSASS Memory Access'
+                                RiskLevel                 = $RiskLevel
+                                DomainController          = $DomainController
+                                EventID                   = 10
+                                SourceProcess             = $SourceImage
+                                SourceUser                = $SourceUser
+                                GrantedAccess             = $GrantedAccess
+                                SourceIP                  = $null
+                                UniqueUserCount           = $null
+                                NTLMEventCount            = $null
+                                ServiceName               = $null
+                                ServicePath               = $null
+                                AccountName               = $null
+                                CredentialGuardConfigured = $null
+                                CredentialGuardRunning    = $null
+                                NTLMAuditingEnabled       = $null
+                                Indicator                 = 'Process accessed LSASS memory, potentially indicating credential theft or patching activity.'
+                                Recommendation            = 'Investigate source process and account immediately; isolate host if malicious tools are confirmed.'
                             })
                     } #end foreach
                 } catch {
@@ -385,26 +391,26 @@
                             $ImagePath -match 'temp|downloads|users') {
 
                             [void]$Findings.Add([PSCustomObject]@{
-                                    PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                    Timestamp                  = $Event7045.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')
-                                    FindingType                = 'Suspicious Service Installation'
-                                    RiskLevel                  = 'High'
-                                    DomainController           = $DomainController
-                                    EventID                    = 7045
-                                    SourceProcess              = $null
-                                    SourceUser                 = $null
-                                    GrantedAccess              = $null
-                                    SourceIP                   = $null
-                                    UniqueUserCount            = $null
-                                    NTLMEventCount             = $null
-                                    ServiceName                = $ServiceName
-                                    ServicePath                = $ImagePath
-                                    AccountName                = $InstalledBy
-                                    CredentialGuardConfigured  = $null
-                                    CredentialGuardRunning     = $null
-                                    NTLMAuditingEnabled        = $null
-                                    Indicator                  = 'Suspicious service deployment pattern may indicate remote staging or malicious tooling.'
-                                    Recommendation             = 'Validate service provenance and remove unauthorized services from domain controllers.'
+                                    PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                    Timestamp                 = $Event7045.TimeCreated.ToString('yyyy-MM-dd HH:mm:ss')
+                                    FindingType               = 'Suspicious Service Installation'
+                                    RiskLevel                 = 'High'
+                                    DomainController          = $DomainController
+                                    EventID                   = 7045
+                                    SourceProcess             = $null
+                                    SourceUser                = $null
+                                    GrantedAccess             = $null
+                                    SourceIP                  = $null
+                                    UniqueUserCount           = $null
+                                    NTLMEventCount            = $null
+                                    ServiceName               = $ServiceName
+                                    ServicePath               = $ImagePath
+                                    AccountName               = $InstalledBy
+                                    CredentialGuardConfigured = $null
+                                    CredentialGuardRunning    = $null
+                                    NTLMAuditingEnabled       = $null
+                                    Indicator                 = 'Suspicious service deployment pattern may indicate remote staging or malicious tooling.'
+                                    Recommendation            = 'Validate service provenance and remove unauthorized services from domain controllers.'
                                 })
                         } #end if
                     } #end foreach
@@ -450,26 +456,26 @@
                         $UniqueUsers = @($IpGroup.Group | Select-Object -ExpandProperty TargetUserName -Unique).Count
                         if ($UniqueUsers -ge 5) {
                             [void]$Findings.Add([PSCustomObject]@{
-                                    PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                    Timestamp                  = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-                                    FindingType                = 'Multiple Users from Single IP'
-                                    RiskLevel                  = 'High'
-                                    DomainController           = $DomainController
-                                    EventID                    = 4624
-                                    SourceProcess              = $null
-                                    SourceUser                 = $null
-                                    GrantedAccess              = $null
-                                    SourceIP                   = $IpGroup.Name
-                                    UniqueUserCount            = $UniqueUsers
-                                    NTLMEventCount             = $null
-                                    ServiceName                = $null
-                                    ServicePath                = $null
-                                    AccountName                = $null
-                                    CredentialGuardConfigured  = $null
-                                    CredentialGuardRunning     = $null
-                                    NTLMAuditingEnabled        = $null
-                                    Indicator                  = 'Single source IP authenticated as many accounts in analysis window.'
-                                    Recommendation             = 'Investigate source host and account activity for potential lateral movement/backdoor abuse.'
+                                    PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                    Timestamp                 = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+                                    FindingType               = 'Multiple Users from Single IP'
+                                    RiskLevel                 = 'High'
+                                    DomainController          = $DomainController
+                                    EventID                   = 4624
+                                    SourceProcess             = $null
+                                    SourceUser                = $null
+                                    GrantedAccess             = $null
+                                    SourceIP                  = $IpGroup.Name
+                                    UniqueUserCount           = $UniqueUsers
+                                    NTLMEventCount            = $null
+                                    ServiceName               = $null
+                                    ServicePath               = $null
+                                    AccountName               = $null
+                                    CredentialGuardConfigured = $null
+                                    CredentialGuardRunning    = $null
+                                    NTLMAuditingEnabled       = $null
+                                    Indicator                 = 'Single source IP authenticated as many accounts in analysis window.'
+                                    Recommendation            = 'Investigate source host and account activity for potential lateral movement/backdoor abuse.'
                                 })
                         } #end if
                     } #end foreach
@@ -496,26 +502,26 @@
 
                     if (-not $NtlmAuditEnabled) {
                         [void]$Findings.Add([PSCustomObject]@{
-                                PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                Timestamp                  = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-                                FindingType                = 'NTLM Auditing Disabled'
-                                RiskLevel                  = 'Medium'
-                                DomainController           = $DomainController
-                                EventID                    = $null
-                                SourceProcess              = $null
-                                SourceUser                 = $null
-                                GrantedAccess              = $null
-                                SourceIP                   = $null
-                                UniqueUserCount            = $null
-                                NTLMEventCount             = $null
-                                ServiceName                = $null
-                                ServicePath                = $null
-                                AccountName                = $null
-                                CredentialGuardConfigured  = $null
-                                CredentialGuardRunning     = $null
-                                NTLMAuditingEnabled        = $false
-                                Indicator                  = 'NTLM auditing is disabled, reducing visibility for suspicious NTLM authentication.'
-                                Recommendation             = 'Enable NTLM auditing and forward operational logs to monitoring systems.'
+                                PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                Timestamp                 = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+                                FindingType               = 'NTLM Auditing Disabled'
+                                RiskLevel                 = 'Medium'
+                                DomainController          = $DomainController
+                                EventID                   = $null
+                                SourceProcess             = $null
+                                SourceUser                = $null
+                                GrantedAccess             = $null
+                                SourceIP                  = $null
+                                UniqueUserCount           = $null
+                                NTLMEventCount            = $null
+                                ServiceName               = $null
+                                ServicePath               = $null
+                                AccountName               = $null
+                                CredentialGuardConfigured = $null
+                                CredentialGuardRunning    = $null
+                                NTLMAuditingEnabled       = $false
+                                Indicator                 = 'NTLM auditing is disabled, reducing visibility for suspicious NTLM authentication.'
+                                Recommendation            = 'Enable NTLM auditing and forward operational logs to monitoring systems.'
                             })
                         continue
                     } #end if
@@ -540,26 +546,26 @@
                     foreach ($UserGroup in $NtlmByUser) {
                         if ($UserGroup.Name -match 'admin|krbtgt|service|root') {
                             [void]$Findings.Add([PSCustomObject]@{
-                                    PSTypeName                 = 'EguibarIT.SkeletonKeyDetection.Finding'
-                                    Timestamp                  = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
-                                    FindingType                = 'Privileged Account NTLM Usage'
-                                    RiskLevel                  = 'Medium'
-                                    DomainController           = $DomainController
-                                    EventID                    = 8004
-                                    SourceProcess              = $null
-                                    SourceUser                 = $null
-                                    GrantedAccess              = $null
-                                    SourceIP                   = $null
-                                    UniqueUserCount            = $null
-                                    NTLMEventCount             = $UserGroup.Count
-                                    ServiceName                = $null
-                                    ServicePath                = $null
-                                    AccountName                = $UserGroup.Name
-                                    CredentialGuardConfigured  = $null
-                                    CredentialGuardRunning     = $null
-                                    NTLMAuditingEnabled        = $true
-                                    Indicator                  = 'Privileged account used NTLM authentication where Kerberos is typically expected.'
-                                    Recommendation             = 'Investigate account and endpoint context; validate protocol hardening controls.'
+                                    PSTypeName                = 'EguibarIT.SkeletonKeyDetection.Finding'
+                                    Timestamp                 = (Get-Date).ToString('yyyy-MM-dd HH:mm:ss')
+                                    FindingType               = 'Privileged Account NTLM Usage'
+                                    RiskLevel                 = 'Medium'
+                                    DomainController          = $DomainController
+                                    EventID                   = 8004
+                                    SourceProcess             = $null
+                                    SourceUser                = $null
+                                    GrantedAccess             = $null
+                                    SourceIP                  = $null
+                                    UniqueUserCount           = $null
+                                    NTLMEventCount            = $UserGroup.Count
+                                    ServiceName               = $null
+                                    ServicePath               = $null
+                                    AccountName               = $UserGroup.Name
+                                    CredentialGuardConfigured = $null
+                                    CredentialGuardRunning    = $null
+                                    NTLMAuditingEnabled       = $true
+                                    Indicator                 = 'Privileged account used NTLM authentication where Kerberos is typically expected.'
+                                    Recommendation            = 'Investigate account and endpoint context; validate protocol hardening controls.'
                                 })
                         } #end if
                     } #end foreach
@@ -611,19 +617,19 @@
             Write-Progress -Activity 'Skeleton Key Detection Audit' -Completed
 
             [PSCustomObject]$Result = [PSCustomObject]@{
-                PSTypeName             = 'EguibarIT.SkeletonKeyDetection'
-                AuditTimestamp         = $AuditTimestamp
-                AnalysisWindowDays     = $DaysBack
-                DomainControllersScanned = $DomainControllersToScan.Count
+                PSTypeName                  = 'EguibarIT.SkeletonKeyDetection'
+                AuditTimestamp              = $AuditTimestamp
+                AnalysisWindowDays          = $DaysBack
+                DomainControllersScanned    = $DomainControllersToScan.Count
                 CheckedAllDomainControllers = $CheckAllDCs.IsPresent
-                TotalFindings          = $Findings.Count
-                CriticalCount          = $CriticalCount
-                HighCount              = $HighCount
-                MediumCount            = $MediumCount
-                IsCompromiseLikely     = ($CriticalCount -gt 0)
-                Findings               = $Findings
-                RecommendedActions     = $RecommendedActions
-                ExportedReports        = $ExportedReports
+                TotalFindings               = $Findings.Count
+                CriticalCount               = $CriticalCount
+                HighCount                   = $HighCount
+                MediumCount                 = $MediumCount
+                IsCompromiseLikely          = ($CriticalCount -gt 0)
+                Findings                    = $Findings
+                RecommendedActions          = $RecommendedActions
+                ExportedReports             = $ExportedReports
             }
 
             Write-Output -InputObject $Result

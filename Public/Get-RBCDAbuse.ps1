@@ -113,6 +113,10 @@
             HelpMessage = 'Number of days to search backwards in Event Logs (1-365).',
             Position = 1)]
         [ValidateRange(1, 365)]
+        [PSDefaultValue(
+            Help = 'Default: 30 days',
+            Value = 30
+        )]
         [int]
         $DaysToSearch = 30,
 
@@ -122,6 +126,10 @@
             HelpMessage = 'Directory path for CSV/JSON output files.',
             Position = 2)]
         [ValidateNotNullOrEmpty()]
+        [PSDefaultValue(
+            Help = 'Default on current user desktop',
+            Value = '<CurrentUser>\Desktop\RBCDAudit'
+        )]
         [string]
         $OutputPath = ('{0}\Desktop\RBCDAudit' -f $env:USERPROFILE),
 
@@ -134,7 +142,7 @@
         $CheckAllDCs
     )
 
-    Begin {
+    begin {
 
         $txt = ($Variables.HeaderHousekeeping -f
             (Get-Date).ToShortDateString(),
@@ -177,7 +185,7 @@
 
     } #end Begin
 
-    Process {
+    process {
 
         try {
 
@@ -224,7 +232,7 @@
             try {
                 $computersWithRBCD = Get-ADComputer -Filter * -Server $DomainController `
                     -Properties 'msDS-AllowedToActOnBehalfOfOtherIdentity', 'whenChanged', 'OperatingSystem', 'DistinguishedName' |
-                Where-Object { $_.'msDS-AllowedToActOnBehalfOfOtherIdentity' -ne $null }
+                    Where-Object { $_.'msDS-AllowedToActOnBehalfOfOtherIdentity' -ne $null }
 
                 Write-Verbose -Message ('[Phase 1] Found {0} computers with RBCD configured' -f $computersWithRBCD.Count)
 
@@ -418,18 +426,18 @@
                         $highAlerts++
 
                         $finding = [PSCustomObject]@{
-                            DetectionPhase        = 'Phase 4: Event 4769 (S4U2Proxy)'
-                            Severity              = $severity
-                            EventID               = 4769
-                            TimeCreated           = $event.TimeCreated
-                            DomainController      = $dc
-                            ServiceName           = $eventData['ServiceName']
-                            TargetUserName        = $eventData['TargetUserName']
-                            ClientAddress         = $eventData['IpAddress']
-                            TicketOptions         = $eventData['TicketOptions']
-                            TicketEncryptionType  = $eventData['TicketEncryptionType']
-                            Recommendation        = 'HIGH: S4U2Proxy delegation detected (Ticket Options 0x40810000). Verify if legitimate delegation or RBCD abuse. Correlate with Phase 1 RBCD configurations.'
-                            Timestamp             = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+                            DetectionPhase       = 'Phase 4: Event 4769 (S4U2Proxy)'
+                            Severity             = $severity
+                            EventID              = 4769
+                            TimeCreated          = $event.TimeCreated
+                            DomainController     = $dc
+                            ServiceName          = $eventData['ServiceName']
+                            TargetUserName       = $eventData['TargetUserName']
+                            ClientAddress        = $eventData['IpAddress']
+                            TicketOptions        = $eventData['TicketOptions']
+                            TicketEncryptionType = $eventData['TicketEncryptionType']
+                            Recommendation       = 'HIGH: S4U2Proxy delegation detected (Ticket Options 0x40810000). Verify if legitimate delegation or RBCD abuse. Correlate with Phase 1 RBCD configurations.'
+                            Timestamp            = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
                         }
                         [void]$AllFindings.Add($finding)
 
@@ -583,9 +591,16 @@
 
     } #end Process
 
-    End {
-        $txt = ($Variables.FooterHousekeeping -f $MyInvocation.InvocationName, 'detecting RBCD abuse.')
-        Write-Verbose -Message $txt
+    end {
+
+        if ($null -ne $Variables -and
+            $null -ne $Variables.FooterSecurity) {
+
+            $txt = ($Variables.FooterSecurity -f $MyInvocation.InvocationName,
+                'finished detecting group policy preferences passwords.'
+            )
+            Write-Verbose -Message $txt
+        } #end If
 
         # Return findings
         return $AllFindings
