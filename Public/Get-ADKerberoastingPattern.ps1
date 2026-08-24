@@ -231,8 +231,8 @@
         # Variables Definition
 
         [int]$script:DetectionCount = 0
-        [System.Collections.ArrayList]$script:DetectionResults = @()
-        [System.Collections.ArrayList]$script:ProcessedDCs = @()
+        [System.Collections.Generic.List[PSCustomObject]]$script:DetectionResults = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$script:ProcessedDCs = [System.Collections.Generic.List[string]]::new()
 
         # Calculate time range once for all DCs
         $script:StartTime = (Get-Date).AddMinutes(-$TimeSpanMinutes)
@@ -330,7 +330,7 @@
         # Parse events and filter for Kerberoasting indicators
         Write-Verbose -Message '[*] Parsing events and filtering for Kerberoasting patterns'
 
-        $SuspiciousEvents = [System.Collections.ArrayList]::new()
+        $SuspiciousEvents = [System.Collections.Generic.List[object]]::new()
 
         foreach ($SecurityEvent in $SecurityEvents) {
 

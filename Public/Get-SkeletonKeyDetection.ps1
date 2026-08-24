@@ -193,10 +193,10 @@
         [datetime]$AuditTimestamp = Get-Date
         [datetime]$StartDate = (Get-Date).AddDays(-$DaysBack)
 
-        [System.Collections.ArrayList]$DomainControllersToScan = @()
-        [System.Collections.ArrayList]$Findings = @()
-        [System.Collections.ArrayList]$RecommendedActions = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[string]]$DomainControllersToScan = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$Findings = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$RecommendedActions = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
         Write-Verbose -Message ('Starting Skeleton Key detection. Analysis window starts at {0}' -f $StartDate)
     } #end Begin
@@ -432,7 +432,7 @@
                         StartTime = $StartDate
                     } -MaxEvents 10000 -ErrorAction SilentlyContinue
 
-                    [System.Collections.ArrayList]$ParsedLogons = @()
+                    [System.Collections.Generic.List[object]]$ParsedLogons = [System.Collections.Generic.List[object]]::new()
                     foreach ($Event4624 in $Event4624List) {
                         [xml]$EventXml = $Event4624.ToXml()
 
@@ -527,7 +527,7 @@
                     } #end if
 
                     $NtlmEvents = Get-WinEvent -ComputerName $DomainController -LogName 'Microsoft-Windows-NTLM/Operational' -FilterXPath '*[System[EventID=8004]]' -MaxEvents 1000 -ErrorAction SilentlyContinue
-                    [System.Collections.ArrayList]$ParsedNtlm = @()
+                    [System.Collections.Generic.List[object]]$ParsedNtlm = [System.Collections.Generic.List[object]]::new()
 
                     foreach ($NtlmEvent in $NtlmEvents) {
                         [xml]$EventXml = $NtlmEvent.ToXml()

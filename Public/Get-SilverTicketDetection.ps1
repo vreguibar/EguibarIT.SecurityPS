@@ -219,13 +219,13 @@
         [string]$MitreTechnique = 'T1558.002'
         [string]$RemediationUrl = 'https://www.eguibarit.com/security/five-eyes-ad-attacks.html#silver-ticket'
 
-        [System.Collections.ArrayList]$Detections = @()
-        [System.Collections.ArrayList]$ServiceAccountAudit = @()
-        [System.Collections.ArrayList]$MissingServiceTicket = @()
-        [System.Collections.ArrayList]$ServiceTicketAnomalies = @()
-        [System.Collections.ArrayList]$ComputerAccountAnomalies = @()
-        [System.Collections.ArrayList]$BehaviorAdvisories = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$Detections = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$ServiceAccountAudit = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$MissingServiceTicket = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$ServiceTicketAnomalies = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$ComputerAccountAnomalies = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$BehaviorAdvisories = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
         $Domain = Get-ADDomain -ErrorAction Stop
         [string]$PdcEmulator = $Domain.PDCEmulator
@@ -325,7 +325,7 @@
 
             Write-Verbose -Message '[Phase 2/5] Correlating Event ID 4624 with Event ID 4769 (missing service ticket pattern).'
 
-            [System.Collections.ArrayList]$Event4769 = @()
+            [System.Collections.Generic.List[object]]$Event4769 = [System.Collections.Generic.List[object]]::new()
             $Event4769Query = @{
                 LogName   = 'Security'
                 Id        = 4769
@@ -355,7 +355,7 @@
 
                 [string]$TicketKey = ('{0}|{1}' -f $UserName, $ServiceName)
                 if (-not $UsersWithServiceTicket.ContainsKey($TicketKey)) {
-                    $UsersWithServiceTicket[$TicketKey] = [System.Collections.ArrayList]@()
+                    $UsersWithServiceTicket[$TicketKey] = [System.Collections.Generic.List[object]]::new()
                 } #end If
                 [void]$UsersWithServiceTicket[$TicketKey].Add($EventEntry.TimeCreated)
             } #end ForEach
@@ -622,25 +622,25 @@
         [int]$HighCount = ($Detections | Where-Object { $_.Severity -eq 'HIGH' } | Measure-Object).Count
         [int]$MediumCount = ($Detections | Where-Object { $_.Severity -eq 'MEDIUM' } | Measure-Object).Count
 
-        [string[]]$RecommendedActions = @()
+        $RecommendedActions = [System.Collections.Generic.List[string]]::new()
 
         if ($BaselineMode) {
-            $RecommendedActions += 'Baseline mode enabled: validate trends before enabling enforcement alerts.'
+            [void]$RecommendedActions.Add('Baseline mode enabled: validate trends before enabling enforcement alerts.')
         } #end If
 
         if ($CriticalCount -gt 0 -and -not $BaselineMode) {
-            $RecommendedActions += 'IMMEDIATE: rotate affected service account passwords.'
-            $RecommendedActions += 'Enable PAC validation on high-value services.'
-            $RecommendedActions += 'Investigate source systems for persistence mechanisms.'
+            [void]$RecommendedActions.Add('IMMEDIATE: rotate affected service account passwords.')
+            [void]$RecommendedActions.Add('Enable PAC validation on high-value services.')
+            [void]$RecommendedActions.Add('Investigate source systems for persistence mechanisms.')
         } elseif (($HighCount -gt 0 -or $MediumCount -gt 0) -and -not $BaselineMode) {
-            $RecommendedActions += 'Review suspicious service authentication paths and stale credentials.'
-            $RecommendedActions += 'Migrate non-gMSA service accounts to gMSA where possible.'
+            [void]$RecommendedActions.Add('Review suspicious service authentication paths and stale credentials.')
+            [void]$RecommendedActions.Add('Migrate non-gMSA service accounts to gMSA where possible.')
         } else {
-            $RecommendedActions += 'No actionable Silver Ticket indicators detected.'
+            [void]$RecommendedActions.Add('No actionable Silver Ticket indicators detected.')
         } #end If-ElseIf-Else
 
         if ($IncludeServiceAccountAudit) {
-            $RecommendedActions += 'Prioritize service account hardening: gMSA migration, rotation cadence, and privileged group review.'
+            [void]$RecommendedActions.Add('Prioritize service account hardening: gMSA migration, rotation cadence, and privileged group review.')
         } #end If
 
         if ($ExportPath) {

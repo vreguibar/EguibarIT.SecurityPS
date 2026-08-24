@@ -93,7 +93,7 @@
     #>
 
     [CmdletBinding(SupportsShouldProcess = $false, ConfirmImpact = 'Low')]
-    [OutputType([System.Collections.ArrayList])]
+    [OutputType([PSCustomObject])]
 
     param(
         [Parameter(Mandatory = $false,
@@ -156,7 +156,7 @@
         ##############################
         # Variables Definition
 
-        [System.Collections.ArrayList]$AllFindings = @()
+        [System.Collections.Generic.List[PSCustomObject]]$AllFindings = [System.Collections.Generic.List[PSCustomObject]]::new()
         $StartDate = (Get-Date).AddDays(-$DaysBack)
         $Timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 
@@ -180,7 +180,7 @@
     process {
         try {
             # Determine which DCs to check
-            [System.Collections.ArrayList]$DCList = @()
+            [System.Collections.Generic.List[string]]$DCList = [System.Collections.Generic.List[string]]::new()
 
             if ($PSBoundParameters.ContainsKey('DomainController') -and $DomainController.Count -gt 0) {
                 # Use specified DCs from parameter

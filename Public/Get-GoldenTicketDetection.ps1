@@ -200,15 +200,15 @@
         [string]$MitreTechnique = 'T1558.001'
         [string]$RemediationUrl = 'https://eguibarit.eu/security/five-eyes-ad-attacks.html#golden-ticket'
 
-        [System.Collections.ArrayList]$Detections = @()
-        [System.Collections.ArrayList]$KrbtgtAudit = @()
-        [System.Collections.ArrayList]$TgtAnomalies = @()
-        [System.Collections.ArrayList]$MissingTgt = @()
-        [System.Collections.ArrayList]$ServiceTicketAnomalies = @()
-        [System.Collections.ArrayList]$PrivilegeAnomalies = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$Detections = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$KrbtgtAudit = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$TgtAnomalies = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$MissingTgt = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$ServiceTicketAnomalies = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$PrivilegeAnomalies = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
-        [System.Collections.ArrayList]$Event4768 = @()
+        [System.Collections.Generic.List[object]]$Event4768 = [System.Collections.Generic.List[object]]::new()
 
         $Domain = Get-ADDomain -ErrorAction Stop
         if ([string]::IsNullOrWhiteSpace($DomainController)) {
@@ -356,7 +356,7 @@
                 [string]$UserName = ($Xml.Event.EventData.Data | Where-Object { $_.Name -eq 'TargetUserName' }).'#text'
 
                 if (-not $UsersWithTgt.ContainsKey($UserName)) {
-                    $UsersWithTgt[$UserName] = [System.Collections.ArrayList]@()
+                    $UsersWithTgt[$UserName] = [System.Collections.Generic.List[object]]::new()
                 } #end If
                 [void]$UsersWithTgt[$UserName].Add($EventEntry.TimeCreated)
             } #end ForEach
@@ -540,20 +540,20 @@
         [int]$HighCount = ($Detections | Where-Object { $_.Severity -eq 'HIGH' } | Measure-Object).Count
         [int]$MediumCount = ($Detections | Where-Object { $_.Severity -eq 'MEDIUM' } | Measure-Object).Count
 
-        [string[]]$RecommendedActions = @()
+        $RecommendedActions = [System.Collections.Generic.List[string]]::new()
         if ($CriticalCount -gt 0) {
-            $RecommendedActions += 'Critical indicators detected: rotate krbtgt password twice with 10+ hour delay.'
-            $RecommendedActions += 'Investigate suspicious source IP addresses and disable compromised accounts.'
-            $RecommendedActions += 'Perform incident response and forensic review of Kerberos activity.'
+            [void]$RecommendedActions.Add('Critical indicators detected: rotate krbtgt password twice with 10+ hour delay.')
+            [void]$RecommendedActions.Add('Investigate suspicious source IP addresses and disable compromised accounts.')
+            [void]$RecommendedActions.Add('Perform incident response and forensic review of Kerberos activity.')
         } elseif ($HighCount -gt 0 -or $MediumCount -gt 0) {
-            $RecommendedActions += 'Investigate anomalous Kerberos events and validate account hygiene.'
-            $RecommendedActions += 'Review krbtgt rotation schedule and enforce modern encryption.'
+            [void]$RecommendedActions.Add('Investigate anomalous Kerberos events and validate account hygiene.')
+            [void]$RecommendedActions.Add('Review krbtgt rotation schedule and enforce modern encryption.')
         } else {
-            $RecommendedActions += 'No critical indicators detected. Continue periodic monitoring.'
+            [void]$RecommendedActions.Add('No critical indicators detected. Continue periodic monitoring.')
         } #end If-ElseIf-Else
 
         if ($IncludeKrbtgtRotation) {
-            $RecommendedActions += 'Use Microsoft New-KrbtgtKeys.ps1 and perform two staged rotations.'
+            [void]$RecommendedActions.Add('Use Microsoft New-KrbtgtKeys.ps1 and perform two staged rotations.')
         } #end If
 
         if ($ExportPath -and ($Detections.Count -gt 0 -or $KrbtgtAudit.Count -gt 0)) {

@@ -189,7 +189,7 @@
         $StartTime = (Get-Date).AddMinutes(-$TimeSpanMinutes)
         $EndTime = Get-Date
 
-        $Findings = [System.Collections.ArrayList]::new()
+        $Findings = [System.Collections.Generic.List[PSCustomObject]]::new()
     }
 
     process {

@@ -230,9 +230,9 @@
         ##############################
         # Variables Definition
 
-        [System.Collections.ArrayList]$FilesWithPasswords = @()
-        [System.Collections.ArrayList]$AllXMLFiles = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$FilesWithPasswords = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[object]]$AllXMLFiles = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
         [string]$DomainName = $null
         [string]$SYSVOLPath = $null

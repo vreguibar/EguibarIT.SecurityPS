@@ -223,14 +223,14 @@
         [datetime]$StartDate = (Get-Date).AddDays(-$DaysBack)
         [datetime]$AuditTimestamp = Get-Date
 
-        [System.Collections.ArrayList]$Findings = @()
-        [System.Collections.ArrayList]$RecommendedActions = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
-        [System.Collections.ArrayList]$RawEvents = @()
+        [System.Collections.Generic.List[PSCustomObject]]$Findings = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$RecommendedActions = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[object]]$RawEvents = [System.Collections.Generic.List[object]]::new()
 
-        [System.Collections.ArrayList]$LegitimateDCNames = @()
-        [System.Collections.ArrayList]$LegitimateDCHostNames = @()
-        [System.Collections.ArrayList]$LegitimateDCs = @()
+        [System.Collections.Generic.List[string]]$LegitimateDCNames = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[string]]$LegitimateDCHostNames = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[object]]$LegitimateDCs = [System.Collections.Generic.List[object]]::new()
 
     } #end Begin
 
@@ -440,7 +440,7 @@
             # PHASE 3: AUDIT AD REPLICATION METADATA FOR UNKNOWN DCs
             # =============================================
             try {
-                [System.Collections.ArrayList]$CriticalObjects = @()
+                [System.Collections.Generic.List[object]]$CriticalObjects = [System.Collections.Generic.List[object]]::new()
 
                 [string[]]$PrivilegedGroups = @('Domain Admins', 'Enterprise Admins', 'Schema Admins')
                 foreach ($Group in $PrivilegedGroups) {
@@ -539,7 +539,7 @@
             # =============================================
             try {
                 [string[]]$PrivilegedGroups = @('Domain Admins', 'Enterprise Admins', 'Schema Admins', 'Administrators')
-                [System.Collections.ArrayList]$PrivilegedAccounts = @()
+                [System.Collections.Generic.List[object]]$PrivilegedAccounts = [System.Collections.Generic.List[object]]::new()
 
                 foreach ($Group in $PrivilegedGroups) {
                     try {

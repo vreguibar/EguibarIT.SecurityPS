@@ -236,9 +236,10 @@
         # Variables Definition
 
         # Initialize collections for tracking audit findings
-        [System.Collections.ArrayList]$AllCreationEvents = @()
-        [System.Collections.ArrayList]$SuspiciousComputers = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$AllCreationEvents = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$SuspiciousComputers = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
+        $SplatParams = $null
 
         # Calculate audit time window
         $StartTime = (Get-Date).AddDays(-$TimeSpanDays)
@@ -263,7 +264,7 @@
                 $Domain = Get-ADDomain -ErrorAction Stop
                 $MAQ = $Domain.'ms-DS-MachineAccountQuota'
 
-                Write-Verbose -Message ('Domain: {0}' -f $Domain.DNSRoot)
+                Write-Verbose -Message ('Domain: {0}' -f $Variables.DnsFqdn)
                 Write-Verbose -Message ('MachineAccountQuota Value: {0}' -f $MAQ)
 
                 if ($MAQ -gt 0) {
@@ -281,7 +282,7 @@ RISKS:
   • Bypasses security controls that only monitor user account creation
 
 RECOMMENDED ACTION - Set MachineAccountQuota to 0:
-  Set-ADDomain -Identity '$($Domain.DistinguishedName)' -Replace @{'ms-DS-MachineAccountQuota'='0'}
+  Set-ADDomain -Identity '$($Variables.AdDN)' -Replace @{'ms-DS-MachineAccountQuota'='0'}
 
 ALTERNATIVE - If you MUST allow computer joins (not recommended):
   1. Keep MAQ at current value for temporary compatibility
@@ -397,42 +398,40 @@ ALTERNATIVE - If you MUST allow computer joins (not recommended):
 
             try {
                 # Get all computer accounts with detailed properties
-                $AllComputers = Get-ADComputer -Filter * -Properties `
-                    Created, `
-                    LastLogonDate, `
-                    PasswordLastSet, `
-                    Enabled, `
-                    CanonicalName, `
-                    Description, `
-                    'msDS-AllowedToActOnBehalfOfOtherIdentity' -ErrorAction Stop
+                $SplatParams = @{
+                    Filter      = '*'
+                    Properties  = @('Created', 'LastLogonDate', 'PasswordLastSet', 'Enabled', 'CanonicalName', 'Description', 'msDS-AllowedToActOnBehalfOfOtherIdentity')
+                    ErrorAction = 'Stop'
+                }
+                $AllComputers = Get-ADComputer @SplatParams
 
                 # Analyze for indicators of compromise
                 foreach ($Computer in $AllComputers) {
-                    $Issues = @()
+                    $Issues = [System.Collections.Generic.List[string]]::new()
 
                     # CHECK 1: Never logged on (potential rogue account)
                     if ($null -eq $Computer.LastLogonDate -and $Computer.Created -lt (Get-Date).AddDays(-7)) {
-                        $Issues += "Never used (created $((Get-Date) - $Computer.Created | Select-Object -ExpandProperty Days) days ago)"
+                        [void]$Issues.Add("Never used (created $((Get-Date) - $Computer.Created | Select-Object -ExpandProperty Days) days ago)")
                     } #end if
 
                     # CHECK 2: In default "Computers" container (not standard practice)
                     if ($Computer.CanonicalName -like '*Computers/*' -and $Computer.CanonicalName -notlike '*Domain Controllers*') {
-                        $Issues += 'In default Computers container (should be in OU)'
+                        [void]$Issues.Add('In default Computers container (should be in OU)')
                     } #end if
 
                     # CHECK 3: Resource-Based Constrained Delegation configured (RBCD attack indicator)
                     if ($Computer.'msDS-AllowedToActOnBehalfOfOtherIdentity') {
-                        $Issues += '⚠️ RBCD CONFIGURED - CRITICAL'
+                        [void]$Issues.Add('⚠️ RBCD CONFIGURED - CRITICAL')
                     } #end if
 
                     # CHECK 4: Created recently (within audit timespan)
                     if ($Computer.Created -gt $StartTime) {
-                        $Issues += "Recently created ($($Computer.Created))"
+                        [void]$Issues.Add("Recently created ($($Computer.Created))")
                     } #end if
 
                     # CHECK 5: Suspicious naming patterns
                     if ($Computer.Name -match '^(DESKTOP|LAPTOP|PC|WORKSTATION|TEST|TEMP|ATTACKER|ROGUE|LAB)-.*') {
-                        $Issues += 'Suspicious naming pattern'
+                        [void]$Issues.Add('Suspicious naming pattern')
                     } #end if
 
                     if ($Issues.Count -gt 0) {
@@ -566,7 +565,7 @@ REMEDIATION STEPS:
                         $SummaryText = @"
 MachineAccountQuota Security Audit Summary
 Generated: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-Domain: $($Domain.DNSRoot)
+Domain: $($Variables.DnsFqdn)
 
 CONFIGURATION:
 - MachineAccountQuota: $MAQ $(if ($MAQ -eq 0) { '(SECURE)' } else { '(INSECURE - SET TO 0!)' })
@@ -599,8 +598,8 @@ $(if ($MAQ -gt 0) { 'IMMEDIATE ACTION REQUIRED: Set MachineAccountQuota to 0' } 
             $AuditResult = [PSCustomObject]@{
                 PSTypeName                 = 'EguibarIT.MachineAccountQuotaAudit'
                 AuditDate                  = Get-Date
-                DomainDNS                  = $Domain.DNSRoot
-                DomainDN                   = $Domain.DistinguishedName
+                DomainDNS                  = $Variables.DnsFqdn
+                DomainDN                   = $Variables.AdDN
                 MachineAccountQuotaValue   = $MAQ
                 IsSecure                   = ($MAQ -eq 0)
                 TotalComputerAccounts      = $AllComputers.Count

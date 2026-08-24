@@ -159,10 +159,11 @@
         # Variables Definition
 
         # Initialize result collections
-        [System.Collections.ArrayList]$AllFindings = @()
+        [System.Collections.Generic.List[PSCustomObject]]$AllFindings = [System.Collections.Generic.List[PSCustomObject]]::new()
         [int]$criticalAlerts = 0
         [int]$highAlerts = 0
         [int]$mediumAlerts = 0
+        $SplatParams = $null
 
         # Calculate start date
         $startDate = (Get-Date).AddDays(-$DaysToSearch)
@@ -230,8 +231,12 @@
             Write-Verbose -Message '[Phase 1] Enumerating computers with RBCD configured...'
 
             try {
-                $computersWithRBCD = Get-ADComputer -Filter * -Server $DomainController `
-                    -Properties 'msDS-AllowedToActOnBehalfOfOtherIdentity', 'whenChanged', 'OperatingSystem', 'DistinguishedName' |
+                $SplatParams = @{
+                    Filter      = '*'
+                    Server      = $DomainController
+                    Properties  = @('msDS-AllowedToActOnBehalfOfOtherIdentity', 'whenChanged', 'OperatingSystem', 'DistinguishedName')
+                }
+                $computersWithRBCD = Get-ADComputer @SplatParams |
                     Where-Object { $_.'msDS-AllowedToActOnBehalfOfOtherIdentity' -ne $null }
 
                 Write-Verbose -Message ('[Phase 1] Found {0} computers with RBCD configured' -f $computersWithRBCD.Count)
@@ -242,7 +247,7 @@
                     $sd = New-Object System.DirectoryServices.ActiveDirectorySecurity
                     $sd.SetSecurityDescriptorBinaryForm($rawSD)
 
-                    [System.Collections.ArrayList]$allowedAccounts = @()
+                    [System.Collections.Generic.List[string]]$allowedAccounts = [System.Collections.Generic.List[string]]::new()
                     foreach ($ace in $sd.Access) {
                         try {
                             $account = New-Object System.Security.Principal.SecurityIdentifier($ace.IdentityReference)
@@ -486,8 +491,12 @@
                 } #end if-else
 
                 # Enumerate recently created computer accounts
-                $recentComputers = Get-ADComputer -Filter { whenCreated -gt $startDate } -Server $DomainController `
-                    -Properties 'whenCreated', 'Creator', 'DistinguishedName'
+                $SplatParams = @{
+                    Filter      = { whenCreated -gt $startDate }
+                    Server      = $DomainController
+                    Properties  = @('whenCreated', 'Creator', 'DistinguishedName')
+                }
+                $recentComputers = Get-ADComputer @SplatParams
 
                 Write-Verbose -Message ('[Phase 5] Found {0} recently created computer accounts' -f $recentComputers.Count)
 

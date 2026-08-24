@@ -319,13 +319,13 @@
         Write-Verbose -Message 'MITRE ATT&CK: T1482 (Domain Trust Discovery)'
 
         # Initialize result collections using ArrayList for performance
-        [System.Collections.ArrayList]$TrustRelationships = @()
-        [System.Collections.ArrayList]$SIDFilteringViolations = @()
-        [System.Collections.ArrayList]$SelectiveAuthViolations = @()
-        [System.Collections.ArrayList]$CrossForestTGTs = @()
-        [System.Collections.ArrayList]$PrivilegedCrossTrustAuth = @()
-        [System.Collections.ArrayList]$TrustEnumerationEvents = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$TrustRelationships = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$SIDFilteringViolations = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$SelectiveAuthViolations = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$CrossForestTGTs = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$PrivilegedCrossTrustAuth = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$TrustEnumerationEvents = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
         # Event IDs for trust abuse detection
         $MonitoredEventIDs = @{
@@ -404,9 +404,9 @@
         try {
             $Domain = Get-ADDomain -ErrorAction Stop
             $Forest = Get-ADForest -ErrorAction Stop
-            $AuditResult.DomainName = $Domain.DNSRoot
+            $AuditResult.DomainName = $Variables.DnsFqdn
             $AuditResult.ForestName = $Forest.Name
-            Write-Verbose -Message ('Auditing domain: {0} (Forest: {1})' -f $Domain.DNSRoot, $Forest.Name)
+            Write-Verbose -Message ('Auditing domain: {0} (Forest: {1})' -f $Variables.DnsFqdn, $Forest.Name)
         } catch {
             Write-Error -Message ('Failed to retrieve domain information: {0}' -f $_.Exception.Message) -ErrorAction Stop
         } #end try-catch
@@ -425,7 +425,7 @@
         Write-Verbose -Message ('Analysis window: {0} days (from {1})' -f $DaysBack, $StartDate.ToString('yyyy-MM-dd HH:mm:ss'))
 
         # Determine which DCs to check
-        [System.Collections.ArrayList]$DCList = @()
+        [System.Collections.Generic.List[string]]$DCList = [System.Collections.Generic.List[string]]::new()
 
         if ($PSBoundParameters.ContainsKey('DomainController')) {
             foreach ($DC in $DomainController) {
@@ -485,7 +485,7 @@
                     $IsExternalTrust = $Trust.ForestTransitive -eq $false
 
                     # Risk assessment
-                    [System.Collections.ArrayList]$RiskFactors = @()
+                    [System.Collections.Generic.List[string]]$RiskFactors = [System.Collections.Generic.List[string]]::new()
 
                     if ($IsExternalTrust -and -not $SIDFilteringEnabled) {
                         [void]$RiskFactors.Add('External trust without SID filtering')
@@ -832,7 +832,7 @@
         $AuditResult.TrustRelationships = $TrustRelationships.ToArray()
 
         # Combine all violations
-        [System.Collections.ArrayList]$AllViolations = @()
+        [System.Collections.Generic.List[PSCustomObject]]$AllViolations = [System.Collections.Generic.List[PSCustomObject]]::new()
         $AllViolations.AddRange($SIDFilteringViolations)
         $AllViolations.AddRange($SelectiveAuthViolations)
         $AllViolations.AddRange($PrivilegedCrossTrustAuth)
@@ -857,7 +857,7 @@
         } #end if-else
 
         # Generate recommended actions
-        [System.Collections.ArrayList]$Actions = @()
+        [System.Collections.Generic.List[string]]$Actions = [System.Collections.Generic.List[string]]::new()
 
         if ($PrivilegedCrossTrustAuth.Count -gt 0) {
             [void]$Actions.Add('CRITICAL: Privileged accounts authenticating across trust boundaries - investigate immediately')

@@ -202,15 +202,15 @@
         [datetime]$AuditTimestamp = Get-Date
         [datetime]$StartDate = (Get-Date).AddDays(-$DaysBack)
 
-        [System.Collections.ArrayList]$Findings = @()
-        [System.Collections.ArrayList]$RecommendedActions = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$Findings = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$RecommendedActions = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
-        [System.Collections.ArrayList]$UsersWithSIDHistory = @()
-        [System.Collections.ArrayList]$ComputersWithSIDHistory = @()
+        [System.Collections.Generic.List[object]]$UsersWithSIDHistory = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[object]]$ComputersWithSIDHistory = [System.Collections.Generic.List[object]]::new()
 
-        [System.Collections.ArrayList]$LegitimateDCNames = @()
-        [System.Collections.ArrayList]$LegitimateDCHostNames = @()
+        [System.Collections.Generic.List[string]]$LegitimateDCNames = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[string]]$LegitimateDCHostNames = [System.Collections.Generic.List[string]]::new()
 
         [hashtable]$PrivilegedSidMap = [hashtable]::New([StringComparer]::OrdinalIgnoreCase)
 
@@ -245,13 +245,18 @@
         ##############################
         # Variables Definition
 
+        $SplatParams = $null
         Write-Verbose -Message ('Starting SID History injection detection. Analysis window starts at {0}' -f $StartDate)
     } #end Begin
 
     process {
         try {
-            Write-Progress -Activity 'SID History Injection Detection Audit' `
-                -Status 'Phase 1/5: Enumerating accounts with SID History' -PercentComplete 10
+            $SplatParams = @{
+                Activity        = 'SID History Injection Detection Audit'
+                Status          = 'Phase 1/5: Enumerating accounts with SID History'
+                PercentComplete = 10
+            }
+            Write-Progress @SplatParams
 
             # =============================================
             # PHASE 1: ENUMERATE ACCOUNTS WITH SID HISTORY
@@ -275,8 +280,12 @@
             Write-Verbose -Message ('[Phase 1] Users with SID History: {0}' -f $UsersWithSIDHistory.Count)
             Write-Verbose -Message ('[Phase 1] Computers with SID History: {0}' -f $ComputersWithSIDHistory.Count)
 
-            Write-Progress -Activity 'SID History Injection Detection Audit' `
-                -Status 'Phase 2/5: Analyzing privileged SID History values' -PercentComplete 30
+            $SplatParams = @{
+                Activity        = 'SID History Injection Detection Audit'
+                Status          = 'Phase 2/5: Analyzing privileged SID History values'
+                PercentComplete = 30
+            }
+            Write-Progress @SplatParams
 
             # =============================================
             # PHASE 2: ANALYZE PRIVILEGED SIDS IN SID HISTORY
@@ -415,8 +424,12 @@
                 } #end foreach
             } #end foreach
 
-            Write-Progress -Activity 'SID History Injection Detection Audit' `
-                -Status 'Phase 3/5: Analyzing Event ID 4765' -PercentComplete 50
+            $SplatParams = @{
+                Activity        = 'SID History Injection Detection Audit'
+                Status          = 'Phase 3/5: Analyzing Event ID 4765'
+                PercentComplete = 50
+            }
+            Write-Progress @SplatParams
 
             # =============================================
             # PHASE 3: EVENT 4765 (SID HISTORY ADDED)
@@ -487,15 +500,19 @@
                 Write-Warning -Message ('Failed to enumerate domain controllers for Event 4765 analysis: {0}' -f $_.Exception.Message)
             } #end try-catch
 
-            Write-Progress -Activity 'SID History Injection Detection Audit' `
-                -Status 'Phase 4/5: Auditing replication metadata anomalies' -PercentComplete 70
+            $SplatParams = @{
+                Activity        = 'SID History Injection Detection Audit'
+                Status          = 'Phase 4/5: Auditing replication metadata anomalies'
+                PercentComplete = 70
+            }
+            Write-Progress @SplatParams
 
             # =============================================
             # PHASE 4: REPLICATION METADATA AUDIT
             # =============================================
             Write-Verbose -Message '[Phase 4] Auditing sidHistory replication metadata origin servers.'
 
-            [System.Collections.ArrayList]$AccountsForMetadataAudit = @()
+            [System.Collections.Generic.List[PSCustomObject]]$AccountsForMetadataAudit = [System.Collections.Generic.List[PSCustomObject]]::new()
             foreach ($User in $UsersWithSIDHistory) {
                 [void]$AccountsForMetadataAudit.Add([PSCustomObject]@{
                         ObjectType        = 'User'
@@ -517,8 +534,13 @@
 
                 foreach ($Account in $AccountsForMetadataAudit) {
                     try {
-                        $MetadataRecords = Get-ADReplicationAttributeMetadata -Object $Account.DistinguishedName `
-                            -Server $MetadataServer -ShowAllLinkedValues -ErrorAction Stop
+                        $SplatParams = @{
+                            Object              = $Account.DistinguishedName
+                            Server              = $MetadataServer
+                            ShowAllLinkedValues = $true
+                            ErrorAction         = 'Stop'
+                        }
+                        $MetadataRecords = Get-ADReplicationAttributeMetadata @SplatParams
 
                         foreach ($MetadataRecord in $MetadataRecords) {
                             if ($MetadataRecord.AttributeName -ne 'sidHistory') {
@@ -527,7 +549,7 @@
 
                             [string]$OriginatingDC = [string]$MetadataRecord.LastOriginatingChangeDirectoryServerIdentity
 
-                            [System.Collections.ArrayList]$OriginCandidates = @()
+                            [System.Collections.Generic.List[string]]$OriginCandidates = [System.Collections.Generic.List[string]]::new()
                             if (-not [string]::IsNullOrWhiteSpace($OriginatingDC)) {
                                 [void]$OriginCandidates.Add($OriginatingDC)
 
@@ -585,8 +607,12 @@
                 Write-Warning -Message 'No domain controllers available for replication metadata baseline; skipping metadata audit.'
             } #end if-else
 
-            Write-Progress -Activity 'SID History Injection Detection Audit' `
-                -Status 'Phase 5/5: Evaluating trust SID filtering' -PercentComplete 90
+            $SplatParams = @{
+                Activity        = 'SID History Injection Detection Audit'
+                Status          = 'Phase 5/5: Evaluating trust SID filtering'
+                PercentComplete = 90
+            }
+            Write-Progress @SplatParams
 
             # =============================================
             # PHASE 5: TRUST SID FILTERING STATUS (OPTIONAL)

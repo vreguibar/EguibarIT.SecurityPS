@@ -316,13 +316,13 @@
         Write-Verbose -Message 'MITRE ATT&CK: T1003 (OS Credential Dumping)'
 
         # Initialize result collections using ArrayList for performance
-        [System.Collections.ArrayList]$DiscoveredServers = @()
-        [System.Collections.ArrayList]$PrivilegedAccounts = @()
-        [System.Collections.ArrayList]$CredentialAccessEvents = @()
-        [System.Collections.ArrayList]$SyncConfigChanges = @()
-        [System.Collections.ArrayList]$PTAAgentFindings = @()
-        [System.Collections.ArrayList]$ADSyncDecryptDetections = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[string]]$DiscoveredServers = [System.Collections.Generic.List[string]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$PrivilegedAccounts = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$CredentialAccessEvents = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$SyncConfigChanges = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$PTAAgentFindings = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$ADSyncDecryptDetections = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
         # Known Entra Connect service names
         $EntraConnectServices = @(
@@ -378,8 +378,8 @@
         # Get current domain
         try {
             $Domain = Get-ADDomain -ErrorAction Stop
-            $AuditResult.DomainName = $Domain.DNSRoot
-            Write-Verbose -Message ('Auditing domain: {0}' -f $Domain.DNSRoot)
+            $AuditResult.DomainName = $Variables.DnsFqdn
+            Write-Verbose -Message ('Auditing domain: {0}' -f $Variables.DnsFqdn)
         } catch {
             Write-Error -Message ('Failed to retrieve domain information: {0}' -f $_.Exception.Message) -ErrorAction Stop
         } #end try-catch
@@ -499,7 +499,7 @@
                         Write-Verbose -Message ('  Found privileged account: {0} (Enabled: {1}, Last Logon: {2})' -f $Account.SamAccountName, $Account.Enabled, $Account.LastLogonDate)
 
                         # Assess risk factors
-                        [System.Collections.ArrayList]$RiskFactors = @()
+                        [System.Collections.Generic.List[string]]$RiskFactors = [System.Collections.Generic.List[string]]::new()
 
                         if ($Account.Enabled) {
                             [void]$RiskFactors.Add('Account is enabled')
@@ -891,7 +891,7 @@
         } #end if-else
 
         # Generate recommended actions
-        [System.Collections.ArrayList]$Actions = @()
+        [System.Collections.Generic.List[string]]$Actions = [System.Collections.Generic.List[string]]::new()
 
         if ($ADSyncDecryptDetections.Count -gt 0) {
             [void]$Actions.Add('CRITICAL: ADSyncDecrypt execution detected - initiate incident response immediately')

@@ -30,7 +30,7 @@
     Copyright            = 'All rights reserved (c) 2026 - EguibarIT.'
 
     # Description of the functionality provided by this module
-    Description          = 'PowerShell module detecting 15+ Active Directory attack patterns from Five Eyes Joint Cybersecurity Advisory. Identifies credential theft (Pass-the-Hash, Pass-the-Ticket, Golden/Silver Tickets, Kerberoasting, AS-REP Roasting), persistence mechanisms (Skeleton Key, SID History Injection, Golden Certificate), privilege escalation (DCSync, DCShadow, Domain Trust Bypass, Unconstrained Delegation), and hybrid infrastructure compromise (Entra Connect, Golden SAML, ADCS vulnerabilities). Supports multi-forest, multi-domain, and hybrid environments.'
+    Description          = 'PowerShell module detecting 18+ Active Directory attack patterns and security misconfigurations from Five Eyes Joint Cybersecurity Advisory and AD housekeeping best practices. Identifies credential theft (Pass-the-Hash, Pass-the-Ticket, Golden/Silver Tickets, Kerberoasting, AS-REP Roasting), persistence mechanisms (Skeleton Key, SID History Injection, Golden Certificate, AdminSDHolder ACL drift, orphaned AdminCount), privilege escalation (DCSync, DCShadow, Domain Trust Bypass, Unconstrained Delegation, privileged account delegation violations), ACL hygiene (orphaned SIDs in AD object ACLs), and hybrid infrastructure compromise (Entra Connect, Golden SAML, ADCS vulnerabilities). Supports multi-forest, multi-domain, and hybrid environments.'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion    = '5.1'
@@ -75,6 +75,7 @@
         'Get-ADCSVulnerability',
         'Get-ADKerberoastingPattern',
         'Get-AdKerberosPacValidation',
+        'Get-AdminSDHolderAnomaly',
         'Get-KerberosEncryptionTypes',
         'Get-DCShadowAttack',
         'Get-DCSyncAttack',
@@ -86,7 +87,9 @@
         'Get-MachineAccountQuota',
         'Get-NTDSDitExtraction',
         'Get-NtlmUsageInventory',
+        'Get-OrphanedSIDInACL',
         'Get-PasswordSprayAttack',
+        'Get-PrivilegedDelegationViolation',
         'Get-RBCDAbuse',
         'Get-SkeletonKeyDetection',
         'Get-SIDHistoryInjectionAttack',

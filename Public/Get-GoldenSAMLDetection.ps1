@@ -217,8 +217,8 @@
         Write-Verbose -Message ('Initializing Golden SAML detection scan for last {0} hours' -f $Hours)
 
         # Use ArrayList for better performance
-        [System.Collections.ArrayList]$Results = @()
-        [System.Collections.ArrayList]$EventsOut = @()
+        [System.Collections.Generic.List[PSCustomObject]]$Results = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$EventsOut = [System.Collections.Generic.List[PSCustomObject]]::new()
 
         [datetime]$StartTime = (Get-Date).AddHours(-$Hours)
         [bool]$AdfsPresent = $false
@@ -571,7 +571,7 @@
             $Results.Count, $HighSeverityCount, $MediumSeverityCount, $InfoCount)
 
         # Export results if requested
-        [System.Collections.ArrayList]$ExportedFiles = @()
+        [System.Collections.Generic.List[string]]$ExportedFiles = [System.Collections.Generic.List[string]]::new()
 
         if ($Results.Count -gt 0) {
 

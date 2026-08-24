@@ -220,8 +220,8 @@
         # Variables Definition
 
         [int]$script:DetectionCount = 0
-        [System.Collections.ArrayList]$script:DetectionResults = @()
-        [System.Collections.ArrayList]$script:ProcessedDCs = @()
+        [System.Collections.Generic.List[PSCustomObject]]$script:DetectionResults = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$script:ProcessedDCs = [System.Collections.Generic.List[string]]::new()
 
         # Calculate time range once for all DCs
         $script:StartTime = (Get-Date).AddMinutes(-$TimeSpanMinutes)
@@ -304,7 +304,7 @@
 
         Write-Verbose -Message '[PHASE 1] Collecting Event ID 4625 (Failed Windows Logon - NTLM)'
 
-        [System.Collections.ArrayList]$Failures4625 = @()
+        [System.Collections.Generic.List[PSCustomObject]]$Failures4625 = [System.Collections.Generic.List[PSCustomObject]]::new()
 
         try {
 
@@ -377,7 +377,7 @@
 
         Write-Verbose -Message '[PHASE 2] Collecting Event ID 4771 (Failed Kerberos Pre-Auth)'
 
-        [System.Collections.ArrayList]$Failures4771 = @()
+        [System.Collections.Generic.List[object]]$Failures4771 = [System.Collections.Generic.List[object]]::new()
 
         try {
 
@@ -453,7 +453,7 @@
         Write-Verbose -Message '[PHASE 3] Analyzing Password Spray Patterns'
 
         # Combine both event types
-        [System.Collections.ArrayList]$AllFailures = @()
+        [System.Collections.Generic.List[object]]$AllFailures = [System.Collections.Generic.List[object]]::new()
         $AllFailures.AddRange($Failures4625)
         $AllFailures.AddRange($Failures4771)
 

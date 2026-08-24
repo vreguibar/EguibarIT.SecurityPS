@@ -293,10 +293,10 @@
         Write-Debug -Message ('Extended Rights Map initialized with {0} entries' -f $Variables.ExtendedRightsMap.Count)
 
         # Initialize result collections using ArrayList for performance
-        [System.Collections.ArrayList]$ReplicationPermissions = @()
-        [System.Collections.ArrayList]$AllReplicationEvents = @()
-        [System.Collections.ArrayList]$SuspiciousEvents = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[PSCustomObject]]$ReplicationPermissions = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[object]]$AllReplicationEvents = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[object]]$SuspiciousEvents = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
 
         # Initialize summary object
         [PSCustomObject]$AuditResult = [PSCustomObject]@{
@@ -346,7 +346,7 @@
                 # Analyze each ACE for replication permissions
                 foreach ($ACE in $DomainACL.Access) {
                     $HasReplicationPermission = $false
-                    [System.Collections.ArrayList]$PermissionTypes = @()
+                    [System.Collections.Generic.List[string]]$PermissionTypes = [System.Collections.Generic.List[string]]::new()
 
                     # Check for replication rights (lookup GUIDs from module variables)
                     foreach ($RightName in $ReplicationRightNames) {
@@ -405,8 +405,8 @@
 
                 Write-Debug -Message ('Domain Controllers: {0}' -f ($DomainControllers -join ', '))
 
-                [System.Collections.ArrayList]$DCAccounts = @()
-                [System.Collections.ArrayList]$NonDCAccounts = @()
+                [System.Collections.Generic.List[PSCustomObject]]$DCAccounts = [System.Collections.Generic.List[PSCustomObject]]::new()
+                [System.Collections.Generic.List[PSCustomObject]]$NonDCAccounts = [System.Collections.Generic.List[PSCustomObject]]::new()
 
                 foreach ($Permission in $UniquePermissions) {
                     [string]$Identity = $Permission.Identity
@@ -494,10 +494,10 @@
                                 [string]$Properties = $EventData['Properties']
 
                                 # Build regex pattern from replication rights GUIDs
-                                [string[]]$GUIDPatterns = @()
+                                $GUIDPatterns = [System.Collections.Generic.List[string]]::new()
                                 foreach ($RightName in $ReplicationRightNames) {
                                     if ($RightName -in $Variables.ExtendedRightsMap.Keys) {
-                                        $GUIDPatterns += [regex]::Escape($Variables.ExtendedRightsMap[$RightName])
+                                        [void]$GUIDPatterns.Add([regex]::Escape($Variables.ExtendedRightsMap[$RightName]))
                                     } #end if
                                 } #end foreach
                                 [string]$ReplicationGUIDPattern = $GUIDPatterns -join '|'
@@ -611,10 +611,10 @@
                                     [string]$Properties = $EventData['Properties']
 
                                     # Build regex pattern from replication rights GUIDs
-                                    [string[]]$GUIDPatterns = @()
+                                    $GUIDPatterns = [System.Collections.Generic.List[string]]::new()
                                     foreach ($RightName in $ReplicationRightNames) {
                                         if ($RightName -in $Variables.ExtendedRightsMap.Keys) {
-                                            $GUIDPatterns += [regex]::Escape($Variables.ExtendedRightsMap[$RightName])
+                                            [void]$GUIDPatterns.Add([regex]::Escape($Variables.ExtendedRightsMap[$RightName]))
                                         } #end if
                                     } #end foreach
                                     [string]$ReplicationGUIDPattern = $GUIDPatterns -join '|'

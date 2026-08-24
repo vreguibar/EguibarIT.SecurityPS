@@ -222,16 +222,17 @@
         # Variables Definition
 
         # Initialize collections for tracking audit findings
-        [System.Collections.ArrayList]$DelegatedComputers = @()
-        [System.Collections.ArrayList]$DelegatedUsers = @()
-        [System.Collections.ArrayList]$DomainControllers = @()
-        [System.Collections.ArrayList]$NonDCComputers = @()
-        [System.Collections.ArrayList]$HighRiskSystems = @()
-        [System.Collections.ArrayList]$MediumRiskSystems = @()
-        [System.Collections.ArrayList]$LowRiskSystems = @()
-        [System.Collections.ArrayList]$AllPrivilegedUsers = @()
-        [System.Collections.ArrayList]$VulnerableAdmins = @()
-        [System.Collections.ArrayList]$ExportedReports = @()
+        [System.Collections.Generic.List[object]]$DelegatedComputers = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[object]]$DelegatedUsers = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[object]]$DomainControllers = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[object]]$NonDCComputers = [System.Collections.Generic.List[object]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$HighRiskSystems = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$MediumRiskSystems = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$LowRiskSystems = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$AllPrivilegedUsers = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[PSCustomObject]]$VulnerableAdmins = [System.Collections.Generic.List[PSCustomObject]]::new()
+        [System.Collections.Generic.List[string]]$ExportedReports = [System.Collections.Generic.List[string]]::new()
+        $SplatParams = $null
 
         $HeaderMessage = @'
 ╔════════════════════════════════════════════════════════════════╗
@@ -273,17 +274,12 @@ Domain Information:
                 # Note: Domain Controllers have this flag by design (required for AD operations)
                 Write-Verbose -Message 'Querying computer accounts with TrustedForDelegation attribute...'
 
-                $DelegatedComputers = Get-ADComputer -Filter { TrustedForDelegation -eq $true } -Properties `
-                    TrustedForDelegation, `
-                    userAccountControl, `
-                    Created, `
-                    LastLogonDate, `
-                    OperatingSystem, `
-                    OperatingSystemVersion, `
-                    Enabled, `
-                    CanonicalName, `
-                    Description, `
-                    PrimaryGroupID -ErrorAction Stop
+                $SplatParams = @{
+                    Filter      = { TrustedForDelegation -eq $true }
+                    Properties  = @('TrustedForDelegation', 'userAccountControl', 'Created', 'LastLogonDate', 'OperatingSystem', 'OperatingSystemVersion', 'Enabled', 'CanonicalName', 'Description', 'PrimaryGroupID')
+                    ErrorAction = 'Stop'
+                }
+                $DelegatedComputers = Get-ADComputer @SplatParams
 
                 Write-Verbose -Message ('Found {0} computer accounts with unconstrained delegation' -f $DelegatedComputers.Count)
 
@@ -306,15 +302,12 @@ Computer Account Analysis:
                 if ($IncludeServiceAccounts) {
                     Write-Verbose -Message 'Scanning service accounts for unconstrained delegation...'
 
-                    $DelegatedUsers = Get-ADUser -Filter { TrustedForDelegation -eq $true } -Properties `
-                        TrustedForDelegation, `
-                        userAccountControl, `
-                        Created, `
-                        LastLogonDate, `
-                        Enabled, `
-                        CanonicalName, `
-                        Description, `
-                        ServicePrincipalName -ErrorAction Stop
+                    $SplatParams = @{
+                        Filter      = { TrustedForDelegation -eq $true }
+                        Properties  = @('TrustedForDelegation', 'userAccountControl', 'Created', 'LastLogonDate', 'Enabled', 'CanonicalName', 'Description', 'ServicePrincipalName')
+                        ErrorAction = 'Stop'
+                    }
+                    $DelegatedUsers = Get-ADUser @SplatParams
 
                     Write-Verbose -Message ('Found {0} service accounts with unconstrained delegation' -f $DelegatedUsers.Count)
 
@@ -344,7 +337,7 @@ NON-DOMAIN CONTROLLER SYSTEMS WITH UNCONSTRAINED DELEGATION DETECTED
                 Write-Warning -Message $CriticalWarning
 
                 foreach ($Computer in $NonDCComputers) {
-                    [System.Collections.ArrayList]$RiskFactors = @()
+                    [System.Collections.Generic.List[string]]$RiskFactors = [System.Collections.Generic.List[string]]::new()
                     $RiskScore = 0
 
                     # RISK FACTOR 1: Recently used (attackers may have active access)

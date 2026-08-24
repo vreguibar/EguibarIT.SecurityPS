@@ -162,7 +162,7 @@
             0x80 = 'RC4_HMAC_MD5'
         }
 
-        $Results = [System.Collections.ArrayList]::new()
+        $Results = [System.Collections.Generic.List[PSCustomObject]]::new()
     }
 
     process {
@@ -196,8 +196,8 @@
             }
 
             [int]$SupportedValue = [int]$RawValue
-            [System.Collections.ArrayList]$SupportedTypes = @()
-            [System.Collections.ArrayList]$WeakTypes = @()
+            [System.Collections.Generic.List[string]]$SupportedTypes = [System.Collections.Generic.List[string]]::new()
+            [System.Collections.Generic.List[string]]$WeakTypes = [System.Collections.Generic.List[string]]::new()
 
             foreach ($Entry in $EncryptionMap.GetEnumerator() | Sort-Object Key) {
                 if (($SupportedValue -band [int]$Entry.Key) -eq [int]$Entry.Key) {
